@@ -1,0 +1,34 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Generated
+*.g.dart
+*.freezed.dart
+*.gr.dart
+*.mocks.dart
+.generated/
+.dart_tool/flutter_gen/
+
+# Coverage
+coverage/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Misc
+*.log
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.tmp

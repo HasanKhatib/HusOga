@@ -1,0 +1,31 @@
+# house-risk-snapshot Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-23
+
+## Active Technologies
+- Hive (local NoSQL; recommended over shared_preferences for report objects) (001-house-risk-snapshot)
+
+- Dart 3.x (Flutter SDK 3.x) + Flutter, flutter_localizations (001-house-risk-snapshot)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for Dart 3.x (Flutter SDK 3.x)
+
+## Code Style
+
+Dart 3.x (Flutter SDK 3.x): Follow standard conventions
+
+## Recent Changes
+- 001-house-risk-snapshot: Added Dart 3.x (Flutter SDK 3.x) + Flutter, flutter_localizations
+
+- 001-house-risk-snapshot: Added Dart 3.x (Flutter SDK 3.x) + Flutter, flutter_localizations
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
