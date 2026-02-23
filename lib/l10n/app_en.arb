@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "House Risk Snapshot",
+  "appTitle": "HusÖga",
   "reports": "Reports",
   "createReport": "Create report",
   "noReportsYet": "No reports yet",
@@ -90,5 +90,15 @@
   "componentWetRooms": "Wet rooms",
   "triggeredBy": "Triggered by: ",
   "deleteToAddAnother": "Delete a report to add another, or upgrade to unlock unlimited.",
-  "upgradeToUnlimit": "Upgrade to unlock unlimited reports"
+  "upgradeToUnlimit": "Upgrade to unlock unlimited reports",
+  "reportNotFound": "Report not found",
+  "appSlogan": "House Risk Snapshot",
+  "address": "Address",
+  "addressHint": "Street or property identifier",
+  "devUnlockPurchased": "Unlock paid features (dev)",
+  "reportIntro": "This assessment is based on building norms (SBR BILAGA 3) and typical lifespans. It highlights components that may need attention in the next 5–10 years.",
+  "reportSectionScore": "Overall risk score",
+  "reportSectionFlags": "Components to review",
+  "reportSectionCost": "Estimated cost exposure",
+  "reportSectionChecklist": "Suggested negotiation points"
 }

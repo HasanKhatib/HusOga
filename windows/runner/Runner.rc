@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.houserisksnapshot" "\0"
-            VALUE "FileDescription", "house_risk_snapshot" "\0"
+            VALUE "FileDescription", "HusÖga" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "house_risk_snapshot" "\0"
+            VALUE "InternalName", "HusÖga" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.houserisksnapshot. All rights reserved." "\0"
-            VALUE "OriginalFilename", "house_risk_snapshot.exe" "\0"
-            VALUE "ProductName", "house_risk_snapshot" "\0"
+            VALUE "OriginalFilename", "HusÖga.exe" "\0"
+            VALUE "ProductName", "HusÖga" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

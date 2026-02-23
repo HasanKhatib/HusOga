@@ -26,16 +26,51 @@ class ReportResultScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text(
+              l10n.reportIntro,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n.reportSectionScore,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
             RiskScoreCard(
               score: output.score,
               scoreBand: output.scoreBand,
               l10n: l10n,
             ),
-            const SizedBox(height: 16),
-            LifecycleFlagsCard(flags: output.lifecycleFlags, l10n: l10n),
-            const SizedBox(height: 16),
-            CostBandCard(costBand: output.costBand, l10n: l10n),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            Text(
+              l10n.reportSectionFlags,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            LifecycleFlagsCard(flags: output.lifecycleFlags, l10n: l10n            ),
+            const SizedBox(height: 20),
+            Text(
+              l10n.reportSectionCost,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            CostBandCard(costBand: output.costBand, l10n: l10n            ),
+            const SizedBox(height: 20),
+            Text(
+              l10n.reportSectionChecklist,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
             ChecklistCard(items: output.negotiationChecklist, l10n: l10n),
             const SizedBox(height: 24),
             Text(

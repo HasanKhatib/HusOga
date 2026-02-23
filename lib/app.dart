@@ -14,6 +14,7 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   AppSettings _settings = const AppSettings();
   bool _loading = true;
 
@@ -47,7 +48,8 @@ class _AppState extends State<App> {
       );
     }
     return MaterialApp(
-      title: 'House Risk Snapshot',
+      navigatorKey: _navigatorKey,
+      title: 'HusÖga',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -56,7 +58,7 @@ class _AppState extends State<App> {
       supportedLocales: AppLocalizations.supportedLocales,
       locale: Locale(_settings.locale),
       home: ReportListScreen(
-        onOpenSettings: () => Navigator.of(context).push(
+        onOpenSettings: () => _navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (_) => SettingsScreen(
               settings: _settings,

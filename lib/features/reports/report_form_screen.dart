@@ -38,15 +38,18 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   int? _fasadAge;
   String _uppvarmning = 'bergvarme';
   String _ventilation = 'ftxMekanisk';
+  final TextEditingController _addressController = TextEditingController();
   final Map<String, String> _errors = {};
   final StorageService _storage = StorageService();
   final _uuid = const Uuid();
   Report? _existingReport;
   Timer? _debounceTimer;
+  bool _loadingReport = false;
 
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -57,23 +60,33 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   }
 
   Future<void> _loadReport() async {
+    setState(() => _loadingReport = true);
     final r = await _storage.getReport(widget.reportId!);
-    if (r != null && mounted) {
-      setState(() {
-        _existingReport = r;
-        final i = r.inputs;
-        _byggnadstyp = i.byggnadstyp;
-        _byggnadsar = i.byggnadsar;
-        _size = i.size;
-        _grundlaeggning = i.grundlaeggning;
-        _yttertakType = i.yttertakType;
-        _yttertakAge = i.yttertakAge;
-        _fasadType = i.fasadType;
-        _fasadAge = i.fasadAge;
-        _uppvarmning = i.uppvarmning;
-        _ventilation = i.ventilation;
-      });
+    if (!mounted) return;
+    if (r == null) {
+      setState(() => _loadingReport = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.reportNotFound)),
+      );
+      Navigator.of(context).pop();
+      return;
     }
+    setState(() {
+      _existingReport = r;
+      final i = r.inputs;
+      _byggnadstyp = i.byggnadstyp;
+      _byggnadsar = i.byggnadsar;
+      _size = i.size;
+      _grundlaeggning = i.grundlaeggning;
+      _yttertakType = i.yttertakType;
+      _yttertakAge = i.yttertakAge;
+      _fasadType = i.fasadType;
+      _fasadAge = i.fasadAge;
+      _uppvarmning = i.uppvarmning;
+      _ventilation = i.ventilation;
+      _addressController.text = r.houseLabel;
+      _loadingReport = false;
+    });
   }
 
   void _onFieldChanged() {
@@ -90,6 +103,9 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       yttertakAge: _yttertakAge,
       fasadAge: _fasadAge,
     );
+    final label = _addressController.text.trim();
+    final addrErr = HouseInputsValidator.validateAddress(label.isEmpty ? null : label);
+    if (addrErr != null) return;
     if (errors.isNotEmpty || _byggnadsar == null || _size == null || _yttertakAge == null || _fasadAge == null) return;
     final inputs = HouseInputs(
       byggnadstyp: _byggnadstyp,
@@ -102,11 +118,12 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       fasadAge: _fasadAge!,
       uppvarmning: _uppvarmning,
       ventilation: _ventilation,
+      houseLabel: label.isEmpty ? null : label,
     );
     final output = RiskEngine.compute(inputs);
     final report = Report(
       id: _existingReport!.id,
-      houseLabel: _existingReport!.houseLabel,
+      houseLabel: label,
       inputs: inputs,
       outputs: output,
       timestamp: DateTime.now(),
@@ -127,6 +144,12 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       setState(() => _errors
         ..clear()
         ..addAll(errors));
+      return;
+    }
+    final label = _addressController.text.trim();
+    final addrErr = HouseInputsValidator.validateAddress(label.isEmpty ? null : label);
+    if (addrErr != null) {
+      setState(() => _errors['address'] = addrErr);
       return;
     }
     if (_byggnadsar == null || _size == null || _yttertakAge == null || _fasadAge == null) {
@@ -151,11 +174,12 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       fasadAge: _fasadAge!,
       uppvarmning: _uppvarmning,
       ventilation: _ventilation,
+      houseLabel: label.isEmpty ? null : label,
     );
     final output = RiskEngine.compute(inputs);
     final report = Report(
       id: _existingReport?.id ?? _uuid.v4(),
-      houseLabel: inputs.houseLabel ?? '',
+      houseLabel: label,
       inputs: inputs,
       outputs: output,
       timestamp: DateTime.now(),
@@ -174,6 +198,12 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (_loadingReport) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.houseData)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.houseData)),
       body: SingleChildScrollView(
@@ -182,6 +212,19 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelText: l10n.address,
+                  hintText: l10n.addressHint,
+                  errorText: _errors['address'],
+                ),
+                onChanged: (_) {
+                  setState(() => _errors.remove('address'));
+                  _onFieldChanged();
+                },
+              ),
+              const SizedBox(height: 16),
               ByggnadstypField(
                 value: _byggnadstyp,
                 onChanged: (v) {

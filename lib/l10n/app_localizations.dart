@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'House Risk Snapshot'**
+  /// **'HusÖga'**
   String get appTitle;
 
   /// No description provided for @reports.
@@ -601,6 +601,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upgrade to unlock unlimited reports'**
   String get upgradeToUnlimit;
+
+  /// No description provided for @reportNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Report not found'**
+  String get reportNotFound;
+
+  /// No description provided for @appSlogan.
+  ///
+  /// In en, this message translates to:
+  /// **'House Risk Snapshot'**
+  String get appSlogan;
+
+  /// No description provided for @address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get address;
+
+  /// No description provided for @addressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Street or property identifier'**
+  String get addressHint;
+
+  /// No description provided for @devUnlockPurchased.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock paid features (dev)'**
+  String get devUnlockPurchased;
+
+  /// No description provided for @reportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This assessment is based on building norms (SBR BILAGA 3) and typical lifespans. It highlights components that may need attention in the next 5–10 years.'**
+  String get reportIntro;
+
+  /// No description provided for @reportSectionScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall risk score'**
+  String get reportSectionScore;
+
+  /// No description provided for @reportSectionFlags.
+  ///
+  /// In en, this message translates to:
+  /// **'Components to review'**
+  String get reportSectionFlags;
+
+  /// No description provided for @reportSectionCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cost exposure'**
+  String get reportSectionCost;
+
+  /// No description provided for @reportSectionChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested negotiation points'**
+  String get reportSectionChecklist;
 }
 
 class _AppLocalizationsDelegate

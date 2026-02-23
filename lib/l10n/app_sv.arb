@@ -1,6 +1,6 @@
 {
   "@@locale": "sv",
-  "appTitle": "Hus Risk Översikt",
+  "appTitle": "HusÖga",
   "reports": "Rapporter",
   "createReport": "Skapa rapport",
   "noReportsYet": "Inga rapporter ännu",
@@ -90,5 +90,15 @@
   "componentWetRooms": "Våtrum",
   "triggeredBy": "Uttlöst av: ",
   "deleteToAddAnother": "Radera en rapport för att lägga till en ny, eller uppgradera för obegränsade.",
-  "upgradeToUnlimit": "Uppgradera för obegränsade rapporter"
+  "upgradeToUnlimit": "Uppgradera för obegränsade rapporter",
+  "reportNotFound": "Rapporten hittades inte",
+  "appSlogan": "Hus Risk Översikt",
+  "address": "Adress",
+  "addressHint": "Gata eller fastighetsbeteckning",
+  "devUnlockPurchased": "Lås upp betalfunktioner (dev)",
+  "reportIntro": "Denna bedömning baseras på byggnormer (SBR BILAGA 3) och typiska livslängder. Den markerar komponenter som kan behöva uppmärksamhet de kommande 5–10 åren.",
+  "reportSectionScore": "Total riskpoäng",
+  "reportSectionFlags": "Komponenter att granska",
+  "reportSectionCost": "Uppskattad kostnadsexponering",
+  "reportSectionChecklist": "Förslag till förhandlingspunkter"
 }

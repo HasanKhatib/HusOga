@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'House Risk Snapshot';
+  String get appTitle => 'HusÖga';
 
   @override
   String get reports => 'Reports';
@@ -267,4 +267,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get upgradeToUnlimit => 'Upgrade to unlock unlimited reports';
+
+  @override
+  String get reportNotFound => 'Report not found';
+
+  @override
+  String get appSlogan => 'House Risk Snapshot';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get addressHint => 'Street or property identifier';
+
+  @override
+  String get devUnlockPurchased => 'Unlock paid features (dev)';
+
+  @override
+  String get reportIntro =>
+      'This assessment is based on building norms (SBR BILAGA 3) and typical lifespans. It highlights components that may need attention in the next 5–10 years.';
+
+  @override
+  String get reportSectionScore => 'Overall risk score';
+
+  @override
+  String get reportSectionFlags => 'Components to review';
+
+  @override
+  String get reportSectionCost => 'Estimated cost exposure';
+
+  @override
+  String get reportSectionChecklist => 'Suggested negotiation points';
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/app_settings.dart';
@@ -29,6 +30,7 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showLanguagePicker(context),
           ),
+          if (kDebugMode) const _DevUnlockTile(),
         ],
       ),
     );
@@ -66,5 +68,48 @@ class SettingsScreen extends StatelessWidget {
     final updated = settings.copyWith(locale: locale);
     await SettingsService().saveSettings(updated);
     onSettingsChanged(updated);
+  }
+
+}
+
+class _DevUnlockTile extends StatefulWidget {
+  const _DevUnlockTile();
+
+  @override
+  State<_DevUnlockTile> createState() => _DevUnlockTileState();
+}
+
+class _DevUnlockTileState extends State<_DevUnlockTile> {
+  bool _value = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final v = await SettingsService().getDevUnlockPurchased();
+    if (mounted) setState(() {
+      _value = v;
+      _loading = false;
+    });
+  }
+
+  Future<void> _onChanged(bool value) async {
+    await SettingsService().setDevUnlockPurchased(value);
+    if (mounted) setState(() => _value = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (_loading) return const ListTile(title: Text('...'));
+    return SwitchListTile(
+      title: Text(l10n.devUnlockPurchased),
+      value: _value,
+      onChanged: _onChanged,
+    );
   }
 }

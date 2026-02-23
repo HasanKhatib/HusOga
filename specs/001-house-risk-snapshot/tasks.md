@@ -145,6 +145,70 @@
 
 ---
 
+## Phase 9: Bug Fixes
+
+**Purpose**: Fix reported bugs — restore data when opening saved report; make settings icon functional
+
+**Bug 1**: Opening saved report asks for data again; data should be restored from storage  
+**Bug 2**: Settings icon (gear) does nothing when tapped
+
+### Bug 1 — Report data not restored on open
+
+- [X] T038 [P] Show loading state while loading saved report in `lib/features/reports/report_form_screen.dart`; ensure `_loadReport()` completes and populates form before user sees empty fields
+- [X] T039 Ensure all required form fields are restored from stored `Report.inputs` in `_loadReport()` in `lib/features/reports/report_form_screen.dart`; add error handling if report not found
+
+**Independent Test**: Create report, save, tap it from list; form must show restored data immediately (or show loading until ready), not empty fields
+
+### Bug 2 — Settings icon non-functional
+
+- [X] T040 Fix settings gear navigation: use `GlobalKey<NavigatorState>` on `MaterialApp` and invoke `navigatorKey.currentState?.push()` from `onOpenSettings` in `lib/app.dart` (App’s `context` is above `MaterialApp`, so `Navigator.of(context)` cannot find the navigator)
+
+**Independent Test**: Tap settings icon in report list app bar; SettingsScreen must open
+
+---
+
+## Phase 10: Improvements
+
+**Purpose**: App polish, home page value prop, address field, expanded report content, dev debug toggle
+
+### I1 — App name "HusÖga" everywhere
+
+- [X] T041 [P] Replace `house_risk_snapshot` with app name **"HusÖga"** in user-facing config: `android/app/src/main/AndroidManifest.xml` (android:label), `web/manifest.json` (name, short_name), `web/index.html` (title, apple-mobile-web-app-title), `windows/runner/Runner.rc` (FileDescription, ProductName, etc.), `linux/runner/my_application.cc` (window title); set `appTitle` to "HusÖga" in `lib/l10n/app_en.arb` and `app_sv.arb`; ensure MaterialApp title uses `AppLocalizations.of(context)!.appTitle` in `lib/app.dart`
+
+**Independent Test**: Run app; window/task switcher shows "HusÖga" not "house_risk_snapshot"
+
+### I2 — Home page: app icon + slogan ("House Risk Snapshot" / "Hus Risk Översikt")
+
+- [X] T042 [P] Add `appSlogan` to `lib/l10n/app_en.arb` ("House Risk Snapshot") and `app_sv.arb` ("Hus Risk Översikt") — slogan is the localized descriptive tagline
+- [X] T043 Add hero section to ReportListScreen: app icon + slogan (`AppLocalizations.of(context)!.appSlogan`); show above empty state / report list in `lib/features/reports/report_list_screen.dart`
+
+**Independent Test**: Open app; home shows icon and slogan; English shows "House Risk Snapshot", Swedish shows "Hus Risk Översikt"
+
+### I3 — Address field with validation
+
+- [X] T044 [P] Add address validation (max length, optional; non-empty when provided) in `lib/core/validation.dart`; extend `HouseInputsValidator` if needed
+- [X] T045 Add address/house label field to ReportFormScreen in `lib/features/reports/report_form_screen.dart`; wire to `Report.houseLabel` / `HouseInputs.houseLabel`; apply validation; ensure load/save includes address in `_loadReport` and `_debouncedSave`
+- [X] T046 Add `address` / `houseLabel` l10n strings to `lib/l10n/` and use in form
+
+**Independent Test**: Create report; enter address; save; reopen; address restored. Invalid address shows error.
+
+### I4 — Expand risk assessment report content
+
+- [X] T047 [P] Add l10n strings for expanded report sections (intro text, section context, recommendations) in `lib/l10n/app_en.arb` and `app_sv.arb`
+- [X] T048 Expand ReportResultScreen content in `lib/features/reports/report_result_screen.dart` and risk display widgets: add introductory paragraph, section headers with context, richer explanations for score/flags/cost/checklist
+- [X] T049 [P] Update risk display with section headers and intro for lifecycle flags, cost band, checklist
+
+**Independent Test**: Generate report; result screen shows substantially more explanatory content
+
+### I5 — Dev flag to show purchased features
+
+- [X] T050 Add dev unlock toggle (stored separately in SettingsService); persist in Hive; expose in SettingsScreen only when `kDebugMode` is true in `lib/core/models/app_settings.dart`, `lib/core/services/settings_service.dart`, `lib/features/settings/settings_screen.dart`
+- [X] T051 Make PurchaseService respect dev unlock: when true, `canCreateReport` always returns true; pass AppSettings or override flag via settings service in `lib/core/services/purchase_service.dart`
+
+**Independent Test**: In debug build, enable "Unlock paid features (dev)" in Settings; create multiple reports without purchase
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -153,6 +217,8 @@
 - **Phase 2 (Foundational)**: Depends on Phase 1 — blocks all user stories
 - **Phases 3–7 (User Stories)**: All depend on Phase 2; can proceed sequentially (P1→P2→P3→P4→P5) or in parallel if staffed
 - **Phase 8 (Polish)**: Depends on Phases 3–7
+- **Phase 9 (Bug Fixes)**: Depends on Phases 3–8
+- **Phase 10 (Improvements)**: Depends on Phases 3–9
 
 ### User Story Dependencies
 
@@ -169,8 +235,8 @@
 - Phase 3: T012, T013 [P]
 - Phase 7: T028 [P]
 - Phase 8: T036 [P]
-- Phase 3: T012, T013 [P]
-- Phase 7: T028 [P]
+- Phase 9: T038, T039, T040 [P] (independent bug fixes)
+- Phase 10: T041, T042, T044, T047, T049 [P]
 
 ---
 
@@ -214,7 +280,7 @@ Task: "Add validation tests in test/unit/validation_test.dart"
 
 | Metric | Value |
 |--------|-------|
-| Total tasks | 37 |
+| Total tasks | 51 |
 | Phase 1 (Setup) | 3 |
 | Phase 2 (Foundational) | 8 |
 | US1 (P1) | 6 |
@@ -223,6 +289,10 @@ Task: "Add validation tests in test/unit/validation_test.dart"
 | US4 (P4) | 2 |
 | US5 (P5) | 5 |
 | Polish | 5 |
-| Parallel tasks | 10 |
+| Bug Fixes (Phase 9) | 3 |
+| Improvements (Phase 10) | 11 |
+| Parallel tasks | 18 |
 
 **Suggested MVP scope**: Phases 1–3 (Setup + Foundational + US1)
+
+**Bug fix scope (Phase 9)**: T038–T040 address “saved report data restore” and “settings icon non-functional”

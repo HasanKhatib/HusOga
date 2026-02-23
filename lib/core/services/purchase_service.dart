@@ -12,7 +12,9 @@ class PurchaseService {
   }
 
   Future<bool> canCreateReport(int currentReportCount) async {
-    if (await isPurchased) return true;
+    final s = await _settings.getSettings();
+    if (s.purchased) return true;
+    if (await _settings.getDevUnlockPurchased()) return true;
     return currentReportCount < freeReportLimit;
   }
 

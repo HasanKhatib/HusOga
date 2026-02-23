@@ -30,10 +30,12 @@ class _ReportListScreenState extends State<ReportListScreen> {
   Future<void> _loadReports() async {
     setState(() => _loading = true);
     final list = await _storage.listReports();
-    if (mounted) setState(() {
-      _reports = list;
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _reports = list;
+        _loading = false;
+      });
+    }
   }
 
   void _createReport() async {
@@ -105,30 +107,51 @@ class _ReportListScreenState extends State<ReportListScreen> {
             ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _reports.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.description_outlined, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.noReportsYet,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.createFirstAssessment,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                    ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Icon(Icons.home_work_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.appSlogan,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                )
-              : ListView.builder(
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _reports.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.description_outlined, size: 64, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.noReportsYet,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.createFirstAssessment,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: _reports.length,
                   itemBuilder: (_, i) {
@@ -150,6 +173,9 @@ class _ReportListScreenState extends State<ReportListScreen> {
                     );
                   },
                 ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createReport,
         icon: const Icon(Icons.add),

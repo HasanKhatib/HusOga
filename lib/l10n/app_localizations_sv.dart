@@ -9,7 +9,7 @@ class AppLocalizationsSv extends AppLocalizations {
   AppLocalizationsSv([String locale = 'sv']) : super(locale);
 
   @override
-  String get appTitle => 'Hus Risk Översikt';
+  String get appTitle => 'HusÖga';
 
   @override
   String get reports => 'Rapporter';
@@ -267,4 +267,35 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get upgradeToUnlimit => 'Uppgradera för obegränsade rapporter';
+
+  @override
+  String get reportNotFound => 'Rapporten hittades inte';
+
+  @override
+  String get appSlogan => 'Hus Risk Översikt';
+
+  @override
+  String get address => 'Adress';
+
+  @override
+  String get addressHint => 'Gata eller fastighetsbeteckning';
+
+  @override
+  String get devUnlockPurchased => 'Lås upp betalfunktioner (dev)';
+
+  @override
+  String get reportIntro =>
+      'Denna bedömning baseras på byggnormer (SBR BILAGA 3) och typiska livslängder. Den markerar komponenter som kan behöva uppmärksamhet de kommande 5–10 åren.';
+
+  @override
+  String get reportSectionScore => 'Total riskpoäng';
+
+  @override
+  String get reportSectionFlags => 'Komponenter att granska';
+
+  @override
+  String get reportSectionCost => 'Uppskattad kostnadsexponering';
+
+  @override
+  String get reportSectionChecklist => 'Förslag till förhandlingspunkter';
 }

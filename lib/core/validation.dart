@@ -23,6 +23,14 @@ class HouseInputsValidator {
     return null;
   }
 
+  static const int maxAddressLength = 200;
+
+  static String? validateAddress(String? value) {
+    if (value == null || value.isEmpty) return null;
+    if (value.length > maxAddressLength) return 'Max $maxAddressLength characters';
+    return null;
+  }
+
   static String? validateAge(int? value) {
     if (value == null) return null;
     if (value < minAge) return 'Must be $minAge–$maxAge';
