@@ -17,6 +17,20 @@ build/
 .generated/
 .dart_tool/flutter_gen/
 
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Android
+android/.gradle/
+android/local.properties
+android/captures/
+android/key.properties
+*.jks
+*.keystore
+
 # Coverage
 coverage/
 
