@@ -45,9 +45,9 @@ Tasks:
 Epic: #18
 
 Tasks:
-- [ ] #32 Data: create curated sources registry
-- [ ] #33 UI: show Sources section in Basic report
-- [ ] #34 UI: show Sources in Detailed report grouped by topic
+- [x] #32 Data: create curated sources registry
+- [x] #33 UI: show Sources section in Basic report
+- [x] #34 UI: show Sources in Detailed report grouped by topic
 
 ### 4) Plans + IAP
 
