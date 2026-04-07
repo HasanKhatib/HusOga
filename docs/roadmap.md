@@ -21,7 +21,7 @@ This roadmap is a checklist. Items are checked when the linked GitHub issue is c
 Epic: #16
 
 Tasks:
-- [ ] #21 Spec: Risk Engine v2 formulas + component weights
+- [x] #21 Spec: Risk Engine v2 formulas + component weights
 - [ ] #22 Implement: continuous deterioration curve f(age/lifespan)
 - [ ] #23 Implement: explicit component weights (BCI aggregation)
 - [ ] #24 Implement: defect multipliers for Swedish risk patterns
@@ -33,7 +33,7 @@ Tasks:
 Epic: #17
 
 Tasks:
-- [ ] #27 Spec: Basic vs Detailed report content (free vs paid)
+- [x] #27 Spec: Basic vs Detailed report content (free vs paid)
 - [ ] #28 UI: add CTA to view Detailed report and paywall for free users
 - [ ] #29 UI: build Detailed report screen (paid)
 - [ ] #30 Paid: export/share report (text share)
