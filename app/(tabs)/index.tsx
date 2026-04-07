@@ -6,7 +6,7 @@ import { deleteReport, listReports } from '../../src/core/services/storage';
 import { i18n } from '../../src/i18n/translations';
 import type { Report } from '../../src/core/models/types';
 import { Banner, Card, PageHeader } from '../../src/ui/components';
-import { useTheme } from '../../src/ui/theme';
+import { useTheme } from '../../src/ui/ThemeProvider';
 
 export default function ReportsTab() {
   const t = useTheme();

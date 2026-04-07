@@ -7,6 +7,7 @@ import type { AppSettings } from '../core/models/types';
 interface SettingsContextValue {
   settings: AppSettings;
   setLocale: (locale: 'en' | 'sv') => Promise<void>;
+  setThemeMode: (mode: 'system' | 'light' | 'dark') => Promise<void>;
   isDevUnlocked: boolean;
   setDevUnlock: (val: boolean) => void;
 }
@@ -14,7 +15,7 @@ interface SettingsContextValue {
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>({ locale: 'sv', purchased: false });
+  const [settings, setSettings] = useState<AppSettings>({ locale: 'sv', purchased: false, themeMode: 'system' });
   const [isDevUnlocked, setIsDevUnlocked] = useState(false);
 
   useEffect(() => {
@@ -40,13 +41,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     await saveSettings(updated);
   }
 
+  async function setThemeMode(mode: 'system' | 'light' | 'dark') {
+    const updated = { ...settings, themeMode: mode };
+    setSettings(updated);
+    await saveSettings(updated);
+  }
+
   async function setDev(val: boolean) {
     setIsDevUnlocked(val);
     await setDevUnlock(val);
   }
 
   return (
-    <SettingsContext.Provider value={{ settings, setLocale, isDevUnlocked, setDevUnlock: setDev }}>
+    <SettingsContext.Provider value={{ settings, setLocale, setThemeMode, isDevUnlocked, setDevUnlock: setDev }}>
       {children}
     </SettingsContext.Provider>
   );

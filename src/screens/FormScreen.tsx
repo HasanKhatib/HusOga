@@ -19,7 +19,7 @@ import { computeRisk, MODEL_VERSION } from '../core/services/riskEngine';
 import { validateAddress, validateNumeric } from '../core/validation';
 import { i18n } from '../i18n/translations';
 import { Card, Field, Input, PageHeader, PrimaryButton, Screen, SectionTitle, SelectField } from '../ui/components';
-import { useTheme } from '../ui/theme';
+import { useTheme } from '../ui/ThemeProvider';
 
 export default function FormScreen() {
   const t = useTheme();

@@ -6,7 +6,7 @@ import { getReport } from '../src/core/services/storage';
 import { i18n } from '../src/i18n/translations';
 import type { Report, LifecycleFlag } from '../src/core/models/types';
 import { Banner, Card, PageHeader, Screen, SectionTitle } from '../src/ui/components';
-import { useTheme } from '../src/ui/theme';
+import { useTheme } from '../src/ui/ThemeProvider';
 
 function formatSEK(amount: number): string {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} MSEK`;

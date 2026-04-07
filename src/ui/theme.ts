@@ -1,8 +1,6 @@
-import { useColorScheme } from 'react-native';
-
 export type Theme = ReturnType<typeof buildTheme>;
 
-function buildTheme(mode: 'light' | 'dark') {
+export function buildTheme(mode: 'light' | 'dark') {
   const isDark = mode === 'dark';
   const bg = isDark ? '#0B0F17' : '#F6F7FB';
   const surface = isDark ? '#101827' : '#FFFFFF';
@@ -66,9 +64,4 @@ function buildTheme(mode: 'light' | 'dark') {
           shadowOffset: { width: 0, height: 8 },
         },
   };
-}
-
-export function useTheme() {
-  const scheme = useColorScheme();
-  return buildTheme(scheme === 'dark' ? 'dark' : 'light');
 }

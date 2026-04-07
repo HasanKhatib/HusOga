@@ -4,7 +4,7 @@ import type { AppSettings } from '../models/types';
 const SETTINGS_KEY = '@husoga:settings';
 const DEV_UNLOCK_KEY = '@husoga:dev_unlock';
 
-const DEFAULT_SETTINGS: AppSettings = { locale: 'sv', purchased: false };
+const DEFAULT_SETTINGS: AppSettings = { locale: 'sv', purchased: false, themeMode: 'system' };
 
 export async function getSettings(): Promise<AppSettings> {
   const raw = await AsyncStorage.getItem(SETTINGS_KEY);

@@ -9,7 +9,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
-import { useTheme } from './theme';
+import { useTheme } from './ThemeProvider';
 
 export function Screen({
   children,

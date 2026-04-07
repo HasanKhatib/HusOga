@@ -3,14 +3,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSettings } from '../src/context/SettingsContext';
 import { i18n } from '../src/i18n/translations';
 import { Banner, Card, PageHeader, Screen, SectionTitle, PrimaryButton } from '../src/ui/components';
-import { useTheme } from '../src/ui/theme';
+import { useTheme } from '../src/ui/ThemeProvider';
 import { unlockPurchased } from '../src/core/services/purchase';
 
 const isDev = __DEV__;
 
 export default function SettingsScreen() {
   const t = useTheme();
-  const { settings, setLocale, isDevUnlocked, setDevUnlock } = useSettings();
+  const { settings, setLocale, setThemeMode, isDevUnlocked, setDevUnlock } = useSettings();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }} edges={['top', 'bottom']}>
@@ -34,6 +34,28 @@ export default function SettingsScreen() {
             >
               <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('languageEnglish')}</Text>
               {settings.locale === 'en' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
+            </Pressable>
+          </View>
+        </Card>
+
+        <View style={{ height: t.space.xl }} />
+
+        <Card>
+          <SectionTitle>{i18n.t('appearance')}</SectionTitle>
+          <View style={styles.list}>
+            <Pressable onPress={() => setThemeMode('system')} style={[styles.row, { borderColor: t.colors.border }]}>
+              <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('themeSystem')}</Text>
+              {settings.themeMode === 'system' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
+            </Pressable>
+            <View style={{ height: 1, backgroundColor: t.colors.border }} />
+            <Pressable onPress={() => setThemeMode('light')} style={[styles.row, { borderColor: t.colors.border }]}>
+              <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('themeLight')}</Text>
+              {settings.themeMode === 'light' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
+            </Pressable>
+            <View style={{ height: 1, backgroundColor: t.colors.border }} />
+            <Pressable onPress={() => setThemeMode('dark')} style={[styles.row, { borderColor: t.colors.border }]}>
+              <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('themeDark')}</Text>
+              {settings.themeMode === 'dark' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
             </Pressable>
           </View>
         </Card>

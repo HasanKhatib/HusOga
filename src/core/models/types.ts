@@ -104,4 +104,5 @@ export interface Report {
 export interface AppSettings {
   locale: 'en' | 'sv';
   purchased: boolean;
+  themeMode: 'system' | 'light' | 'dark';
 }
