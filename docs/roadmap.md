@@ -22,8 +22,8 @@ Epic: #16
 
 Tasks:
 - [x] #21 Spec: Risk Engine v2 formulas + component weights
-- [ ] #22 Implement: continuous deterioration curve f(age/lifespan)
-- [ ] #23 Implement: explicit component weights (BCI aggregation)
+- [x] #22 Implement: continuous deterioration curve f(age/lifespan)
+- [x] #23 Implement: explicit component weights (BCI aggregation)
 - [ ] #24 Implement: defect multipliers for Swedish risk patterns
 - [ ] #25 Bump MODEL_VERSION and add stale report detection + recalc (ties to #13)
 - [ ] #26 Tests: expand riskEngine coverage for v2
