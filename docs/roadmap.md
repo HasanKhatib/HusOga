@@ -7,9 +7,9 @@ Meta tracking issue: #2
 ## Priority Order
 
 1. Risk Engine v2 (logic)
-2. Plans + IAP (free vs paid rules)
-3. Report UX (basic vs detailed, paywall)
-4. Sources & references (in-app)
+2. Report UX (basic vs detailed, paywall)
+3. Sources & references (in-app)
+4. Plans + IAP (free vs paid rules)
 5. Website (single HTML page)
 
 ## Epics
@@ -26,16 +26,7 @@ Tasks:
 - #25 Bump MODEL_VERSION and add stale report detection + recalc (ties to #13)
 - #26 Tests: expand riskEngine coverage for v2
 
-### 2) Plans + IAP
-
-Epic: #19
-
-Tasks:
-- #35 Plan: free tier should allow 2 basic reports
-- #36 IAP: implement real purchase + restore (ties to #11)
-- #37 Gating: enforce paid-only features
-
-### 3) Report UX
+### 2) Report UX
 
 Epic: #17
 
@@ -46,7 +37,7 @@ Tasks:
 - #30 Paid: export/share report (text share)
 - #31 Paid: generate PDF from report
 
-### 4) Sources & References
+### 3) Sources & References
 
 Epic: #18
 
@@ -54,6 +45,15 @@ Tasks:
 - #32 Data: create curated sources registry
 - #33 UI: show Sources section in Basic report
 - #34 UI: show Sources in Detailed report grouped by topic
+
+### 4) Plans + IAP
+
+Epic: #19
+
+Tasks:
+- #35 Plan: free tier should allow 2 basic reports
+- #36 IAP: implement real purchase + restore (ties to #11)
+- #37 Gating: enforce paid-only features
 
 ### 5) Website
 
