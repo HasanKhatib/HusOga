@@ -25,7 +25,7 @@ Tasks:
 - [x] #22 Implement: continuous deterioration curve f(age/lifespan)
 - [x] #23 Implement: explicit component weights (BCI aggregation)
 - [x] #24 Implement: defect multipliers for Swedish risk patterns
-- [ ] #25 Bump MODEL_VERSION and add stale report detection + recalc (ties to #13)
+- [x] #25 Bump MODEL_VERSION and add stale report detection + recalc (ties to #13)
 - [ ] #26 Tests: expand riskEngine coverage for v2
 
 ### 2) Report UX
