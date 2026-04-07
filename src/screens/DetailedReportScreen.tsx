@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { Report } from '../core/models/types';
+import type { HouseInputs, LifecycleFlag, Report } from '../core/models/types';
 import { getReport } from '../core/services/storage';
 import { i18n } from '../i18n/translations';
 import { Card, PageHeader, Screen, SectionTitle } from '../ui/components';
 import { useTheme } from '../ui/ThemeProvider';
+import { drainageLifespan, fasadLifespans, roofLifespans, vatrumLifespan } from '../core/data/lifespans';
+import { drainageCost, fasadCostPerSqm, roofCosts, vatrumCost } from '../core/data/costs';
 
 export default function DetailedReportScreen() {
   const t = useTheme();
@@ -18,19 +20,277 @@ export default function DetailedReportScreen() {
     if (reportId) getReport(reportId).then(setReport);
   }, [reportId]);
 
+  const topFlags = useMemo(() => {
+    if (!report) return [] as LifecycleFlag[];
+    return [...report.outputs.lifecycleFlags]
+      .sort((a, b) => b.contributionPercent - a.contributionPercent)
+      .slice(0, 3);
+  }, [report]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }} edges={['top', 'bottom']}>
       <ScrollView>
         <Screen>
           <PageHeader title={i18n.t('detailedReportTitle')} subtitle={report?.houseLabel || undefined} />
-          <Card>
-            <SectionTitle>{i18n.t('comingSoon')}</SectionTitle>
-            <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22 }}>
-              {i18n.t('detailedReportPlaceholder')}
-            </Text>
-          </Card>
+
+          {!report ? (
+            <Card>
+              <Text style={{ color: t.colors.text2, fontWeight: '700' }}>…</Text>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <SectionTitle>{i18n.t('result')}</SectionTitle>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
+                  <Text style={{ color: t.colors.text, fontWeight: '900', fontSize: 44 }}>
+                    {report.outputs.score}
+                  </Text>
+                  <Text style={{ color: t.colors.text2, fontWeight: '800', fontSize: 16 }}>
+                    {i18n.t(report.outputs.scoreBand)}
+                  </Text>
+                </View>
+                <View style={{ height: t.space.m }} />
+                {topFlags.length === 0 ? (
+                  <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22 }}>
+                    {i18n.t('noMajorRisks')}
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={{ color: t.colors.text2, fontWeight: '700', marginBottom: 8 }}>
+                      {i18n.t('topDrivers')}
+                    </Text>
+                    {topFlags.map((f, idx) => (
+                      <View key={idx} style={{ marginBottom: 10 }}>
+                        <Text style={{ color: t.colors.text, fontWeight: '800' }}>{i18n.t(f.messageKey)}</Text>
+                        <Text style={{ color: t.colors.text2, fontWeight: '600' }}>{f.contributionPercent}%</Text>
+                      </View>
+                    ))}
+                  </>
+                )}
+              </Card>
+
+              <View style={{ height: t.space.xl }} />
+
+              <Card>
+                <SectionTitle>{i18n.t('componentBreakdown')}</SectionTitle>
+                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="roof" />
+                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="facade" />
+                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="drainage" />
+                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="wetRooms" />
+                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="ventilation" />
+                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="heating" />
+              </Card>
+
+              <View style={{ height: t.space.xl }} />
+
+              <Card>
+                <SectionTitle>{i18n.t('assumptionsUsed')}</SectionTitle>
+                <AssumptionsTable inputs={report.inputs} />
+              </Card>
+
+              <View style={{ height: t.space.xl }} />
+
+              <Card>
+                <SectionTitle>{i18n.t('costEstimate')}</SectionTitle>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <CostCell label={i18n.t('minCost')} value={formatSEK(report.outputs.costBand.min)} />
+                  <CostCell label={i18n.t('likelyCost')} value={formatSEK(report.outputs.costBand.likely)} highlight />
+                  <CostCell label={i18n.t('maxCost')} value={formatSEK(report.outputs.costBand.max)} />
+                </View>
+              </Card>
+
+              <View style={{ height: t.space.xl }} />
+
+              <Card>
+                <SectionTitle>{i18n.t('sources')}</SectionTitle>
+                <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22 }}>
+                  {i18n.t('sourcesPlaceholder')}
+                </Text>
+              </Card>
+            </>
+          )}
         </Screen>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function formatSEK(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} MSEK`;
+  if (amount >= 1_000) return `${Math.round(amount / 1_000)} kSEK`;
+  return `${amount} SEK`;
+}
+
+function CostCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        flex: 1,
+        borderRadius: 14,
+        paddingVertical: 14,
+        paddingHorizontal: 10,
+        alignItems: 'center',
+        backgroundColor: highlight ? t.colors.brand : (t.isDark ? '#0B1220' : '#F1F3F8'),
+        borderWidth: 1,
+        borderColor: t.colors.border,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '800',
+          color: highlight ? '#C7D0E0' : t.colors.text2,
+          letterSpacing: 0.6,
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </Text>
+      <Text style={{ fontSize: 16, fontWeight: '900', marginTop: 4, color: highlight ? '#fff' : t.colors.text }}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function ComponentCard({
+  inputs,
+  flags,
+  component,
+}: {
+  inputs: HouseInputs;
+  flags: LifecycleFlag[];
+  component: LifecycleFlag['component'];
+}) {
+  const t = useTheme();
+  const flag = flags.find((f) => f.component === component);
+  const title =
+    component === 'roof'
+      ? `${i18n.t('roofType')}: ${i18n.t(inputs.yttertakType)}`
+      : component === 'facade'
+        ? `${i18n.t('facadeType')}: ${i18n.t(inputs.fasadType)}`
+        : component === 'drainage'
+          ? i18n.t('drainageAge')
+          : component === 'wetRooms'
+            ? i18n.t('wetRoomsAge')
+            : component === 'ventilation'
+              ? `${i18n.t('ventilation')}: ${i18n.t(inputs.ventilation)}`
+              : `${i18n.t('heating')}: ${i18n.t(inputs.uppvarmning)}`;
+
+  const level = flag?.level;
+  const badgeColor = level === 'highRisk' ? t.colors.danger : level === 'risk' ? t.colors.warn : t.colors.ok;
+  const badgeText = level ? i18n.t(level === 'highRisk' ? 'high' : 'medium') : i18n.t('low');
+
+  const lifespanText = componentLifespanText(inputs, component);
+  const costText = componentCostText(inputs, component);
+
+  return (
+    <View
+      style={{
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: t.colors.border,
+        backgroundColor: t.colors.surface2,
+        padding: t.space.l,
+        marginBottom: 12,
+      }}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+        <Text style={{ flex: 1, color: t.colors.text, fontWeight: '900', fontSize: 16 }}>{title}</Text>
+        <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: badgeColor }}>
+          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 12 }}>{badgeText}</Text>
+        </View>
+      </View>
+
+      {flag ? (
+        <>
+          <View style={{ height: 8 }} />
+          <Text style={{ color: t.colors.text2, fontWeight: '700' }}>{i18n.t(flag.messageKey)}</Text>
+        </>
+      ) : null}
+
+      {lifespanText ? (
+        <>
+          <View style={{ height: 8 }} />
+          <Text style={{ color: t.colors.text2, fontWeight: '600' }}>{lifespanText}</Text>
+        </>
+      ) : null}
+
+      {costText ? (
+        <>
+          <View style={{ height: 6 }} />
+          <Text style={{ color: t.colors.text2, fontWeight: '600' }}>{costText}</Text>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function componentLifespanText(inputs: HouseInputs, component: LifecycleFlag['component']): string | null {
+  if (component === 'roof') {
+    const l = roofLifespans[inputs.yttertakType] ?? roofLifespans.other;
+    return `Lifespan: ${l}y (age ${inputs.yttertakAge}y)`;
+  }
+  if (component === 'facade') {
+    const l = fasadLifespans[inputs.fasadType];
+    if (l == null) return `Lifespan: n/a (brick facade)`;
+    return `Lifespan: ${l}y (age ${inputs.fasadAge}y)`;
+  }
+  if (component === 'drainage') {
+    if (inputs.draneringAge == null) return 'Age: not provided';
+    return `Lifespan: ${drainageLifespan}y (age ${inputs.draneringAge}y)`;
+  }
+  if (component === 'wetRooms') {
+    if (inputs.vatrumAge == null) return 'Age: not provided';
+    return `Lifespan: ${vatrumLifespan}y (age ${inputs.vatrumAge}y)`;
+  }
+  return null;
+}
+
+function componentCostText(inputs: HouseInputs, component: LifecycleFlag['component']): string | null {
+  const fmt = (r: [number, number]) => `${formatSEK(r[0])}–${formatSEK(r[1])}`;
+  if (component === 'roof') return `Replacement: ${fmt(roofCosts[inputs.yttertakType] ?? roofCosts.other)}`;
+  if (component === 'drainage') return `Replacement: ${fmt(drainageCost)}`;
+  if (component === 'wetRooms') return `Replacement: ${fmt(vatrumCost)}`;
+  if (component === 'facade') {
+    const cp = fasadCostPerSqm[inputs.fasadType] ?? 1500;
+    if (cp <= 0) return null;
+    const cost = Math.round(inputs.size * cp);
+    return `Typical: ${formatSEK(Math.round(cost * 0.8))}–${formatSEK(Math.round(cost * 1.2))}`;
+  }
+  return null;
+}
+
+function AssumptionsTable({ inputs }: { inputs: HouseInputs }) {
+  const t = useTheme();
+
+  const rows: { label: string; value: string }[] = [
+    { label: i18n.t('roofType'), value: `${i18n.t(inputs.yttertakType)} → ${roofLifespans[inputs.yttertakType] ?? roofLifespans.other}y` },
+    {
+      label: i18n.t('facadeType'),
+      value:
+        fasadLifespans[inputs.fasadType] == null
+          ? `${i18n.t(inputs.fasadType)} → n/a`
+          : `${i18n.t(inputs.fasadType)} → ${fasadLifespans[inputs.fasadType]}y`,
+    },
+    { label: i18n.t('drainageAge'), value: `${drainageLifespan}y (default)` },
+    { label: i18n.t('wetRoomsAge'), value: `${vatrumLifespan}y (default)` },
+  ];
+
+  return (
+    <View style={{ borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: t.colors.border }}>
+      {rows.map((r, idx) => (
+        <View key={r.label}>
+          <View style={{ paddingVertical: 14, paddingHorizontal: 14, backgroundColor: t.colors.surface2 }}>
+            <Text style={{ color: t.colors.text2, fontWeight: '800', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+              {r.label}
+            </Text>
+            <Text style={{ color: t.colors.text, fontWeight: '800', marginTop: 4 }}>{r.value}</Text>
+          </View>
+          {idx < rows.length - 1 ? <View style={{ height: 1, backgroundColor: t.colors.border }} /> : null}
+        </View>
+      ))}
+    </View>
   );
 }

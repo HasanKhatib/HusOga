@@ -132,6 +132,12 @@ const en = {
 
   // Detailed report / paywall
   detailedReportTitle: 'Detailed report',
+  topDrivers: 'Top drivers',
+  noMajorRisks: 'No major risks flagged.',
+  componentBreakdown: 'Component breakdown',
+  assumptionsUsed: 'Assumptions used',
+  sources: 'Sources',
+  sourcesPlaceholder: 'Sources will be shown here (linked and grouped by topic).',
   comingSoon: 'Coming soon',
   detailedReportPlaceholder: 'Detailed report is a paid feature and is under active development.',
   upgradeTitle: 'Upgrade',
@@ -281,6 +287,12 @@ const sv: typeof en = {
   disclaimer: 'Denna bedömning ersätter inte en professionell besiktning. HusÖga är inte kopplat till Boverket eller Folkhälsomyndigheten.',
 
   detailedReportTitle: 'Detaljerad rapport',
+  topDrivers: 'Största drivare',
+  noMajorRisks: 'Inga större risker flaggade.',
+  componentBreakdown: 'Komponentöversikt',
+  assumptionsUsed: 'Antaganden',
+  sources: 'Källor',
+  sourcesPlaceholder: 'Källor visas här (länkade och grupperade per ämne).',
   comingSoon: 'Kommer snart',
   detailedReportPlaceholder: 'Detaljerad rapport är en betalfunktion och utvecklas just nu.',
   upgradeTitle: 'Uppgradera',
