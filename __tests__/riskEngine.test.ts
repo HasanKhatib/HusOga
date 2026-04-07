@@ -149,4 +149,20 @@ describe('computeRiskV2', () => {
     const sj = computeRiskV2({ ...baseInputs, vatrumAge: 10, ventilation: 'sjalvdrag' }).score;
     expect(sj).toBeGreaterThanOrEqual(mech);
   });
+
+  test('contributionPercent is normalized across flags (≈100)', () => {
+    const result = computeRiskV2({
+      ...baseInputs,
+      byggnadsar: 1975,
+      grundlaeggning: 'betongplatta',
+      yttertakType: 'takpapp',
+      yttertakAge: 18,
+      vatrumAge: 19,
+      ventilation: 'sjalvdrag',
+      uppvarmning: 'direktverkandeEl',
+    });
+    const sum = result.lifecycleFlags.reduce((a, f) => a + f.contributionPercent, 0);
+    expect(sum).toBeGreaterThanOrEqual(98);
+    expect(sum).toBeLessThanOrEqual(102);
+  });
 });
