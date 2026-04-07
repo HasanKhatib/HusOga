@@ -27,6 +27,13 @@ export default function DetailedReportScreen() {
     if (reportId) getReport(reportId).then(setReport);
   }, [reportId]);
 
+  useEffect(() => {
+    if (!reportId) return;
+    if (!entitled) {
+      router.replace({ pathname: '/paywall', params: { reportId } });
+    }
+  }, [entitled, reportId, router]);
+
   const topFlags = useMemo(() => {
     if (!report) return [] as LifecycleFlag[];
     return [...report.outputs.lifecycleFlags]

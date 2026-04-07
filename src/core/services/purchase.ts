@@ -1,6 +1,6 @@
 import { getSettings, getDevUnlock, saveSettings } from './settings';
 
-export const FREE_REPORT_LIMIT = 1;
+export const FREE_REPORT_LIMIT = 2;
 
 export async function canCreateReport(currentCount: number): Promise<boolean> {
   const settings = await getSettings();
