@@ -34,6 +34,13 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
       {subtitle ? (
         <Text style={[t.text.body, { color: t.colors.text2, marginTop: 6 }]}>{subtitle}</Text>
       ) : null}
+      <View
+        style={{
+          height: 1,
+          backgroundColor: t.colors.border,
+          marginTop: t.space.l,
+        }}
+      />
     </View>
   );
 }
