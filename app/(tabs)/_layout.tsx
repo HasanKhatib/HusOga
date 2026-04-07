@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ui/theme';
 import { i18n } from '../../src/i18n/translations';
 import { useSettings } from '../../src/context/SettingsContext';
@@ -28,7 +29,9 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: i18n.t('reports'),
-          tabBarIcon: ({ color }) => <TabIcon glyph="\u{1F4C4}" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text-outline" color={color} size={size ?? 22} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -44,15 +47,13 @@ export default function TabsLayout() {
         name="settings"
         options={{
           title: i18n.t('settings'),
-          tabBarIcon: ({ color }) => <TabIcon glyph="\u2699\uFE0F" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" color={color} size={size ?? 22} />
+          ),
         }}
       />
     </Tabs>
   );
-}
-
-function TabIcon({ glyph, color }: { glyph: string; color: string }) {
-  return <Text style={{ fontSize: 22, color }}>{glyph}</Text>;
 }
 
 function PlusIcon({ color }: { color: string }) {
