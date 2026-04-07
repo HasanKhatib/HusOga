@@ -47,7 +47,13 @@ export default function FormScreen() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!reportId) return;
+    // New report mode: ensure we don't carry state from a previously mounted instance.
+    if (!reportId) {
+      setExistingId(null);
+      setLoading(false);
+      return;
+    }
+
     getReport(reportId).then((r) => {
       if (!r) {
         Alert.alert('', i18n.t('reportNotFound'));
@@ -67,8 +73,8 @@ export default function FormScreen() {
       setFasadAge(String(i.fasadAge));
       setUppvarmning(i.uppvarmning);
       setVentilation(i.ventilation);
-      if (i.draneringAge != null) setDraneringAge(String(i.draneringAge));
-      if (i.vatrumAge != null) setVatrumAge(String(i.vatrumAge));
+      setDraneringAge(i.draneringAge != null ? String(i.draneringAge) : '');
+      setVatrumAge(i.vatrumAge != null ? String(i.vatrumAge) : '');
       setLoading(false);
     });
   }, [reportId, router]);
@@ -142,8 +148,9 @@ export default function FormScreen() {
     }
 
     setErrors({});
-    const id = existingId ?? (await uuidv4());
-    setExistingId(id);
+    const isEdit = !!reportId;
+    const id = isEdit ? (existingId ?? reportId) : await uuidv4();
+    if (isEdit) setExistingId(id);
     const report = await persist(id);
     router.push({ pathname: '/result', params: { reportId: report.id } });
   }
