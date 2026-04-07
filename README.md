@@ -21,6 +21,10 @@ Rules:
   Example: `fix(ui): align theme chips (refs #123)`
 - When a change spans multiple issues: `refs #12, #34`.
 
+## Roadmap
+
+See `docs/roadmap.md`.
+
 ## Architecture
 
 - `app/` Expo Router routes (tabs + stack)
