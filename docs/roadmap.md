@@ -54,9 +54,9 @@ Tasks:
 Epic: #19
 
 Tasks:
-- [ ] #35 Plan: free tier should allow 2 basic reports
+- [x] #35 Plan: free tier should allow 2 basic reports
 - [ ] #36 IAP: implement real purchase + restore (ties to #11)
-- [ ] #37 Gating: enforce paid-only features
+- [x] #37 Gating: enforce paid-only features
 
 ### 5) Website
 
