@@ -24,8 +24,12 @@ No codegen, no build steps, no pre-commit hooks.
 
 Use GitHub Issues for all meaningful work so changes are easy to audit and revert.
 
+Roadmap source of truth: `docs/roadmap.md`.
+
 - Create or pick an issue before making changes (feature/bug/refactor/deps/design).
 - Small chores can be grouped under one meta issue.
+- Prefer working in roadmap priority order unless the user explicitly overrides.
+- Every issue must link to an epic (or meta) in the body: `Related: #<epic>`.
 - Every commit message must reference an issue in the subject: `refs #123`.
   Example: `fix(ui): align theme chips (refs #123)`
 
