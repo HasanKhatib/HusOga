@@ -2,7 +2,7 @@ import type { HouseInputs, RiskOutput, LifecycleFlag, CostBand, ScoreBand } from
 import { roofLifespans, fasadLifespans, drainageLifespan, vatrumLifespan } from '../data/lifespans';
 import { roofCosts, fasadCostPerSqm, drainageCost, vatrumCost } from '../data/costs';
 
-export const MODEL_VERSION = '1.0.0';
+export const MODEL_VERSION = '1.1.0';
 
 const RISK_THRESHOLD = 0.7;
 const HIGH_RISK_THRESHOLD = 0.9;
@@ -222,6 +222,10 @@ export function computeRiskV2(inputs: HouseInputs): RiskOutput {
 }
 
 export function computeRisk(inputs: HouseInputs): RiskOutput {
+  return computeRiskV2(inputs);
+}
+
+export function computeRiskV1(inputs: HouseInputs): RiskOutput {
   const flags: LifecycleFlag[] = [];
   let totalScore = 0;
   const costMins: number[] = [];

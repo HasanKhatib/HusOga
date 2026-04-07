@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getReport } from '../src/core/services/storage';
+import { getReport, saveReport } from '../src/core/services/storage';
 import { i18n } from '../src/i18n/translations';
 import type { Report, LifecycleFlag } from '../src/core/models/types';
 import { Banner, Card, PageHeader, PrimaryButton, Screen, SectionTitle } from '../src/ui/components';
 import { useTheme } from '../src/ui/ThemeProvider';
 import { useSettings } from '../src/context/SettingsContext';
+import { computeRisk, MODEL_VERSION } from '../src/core/services/riskEngine';
 
 function formatSEK(amount: number): string {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} MSEK`;
@@ -77,6 +78,7 @@ export default function ResultScreen() {
 
   const { outputs } = report;
   const entitled = settings.purchased || isDevUnlocked;
+  const isStale = report.modelVersion !== MODEL_VERSION;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }} edges={['top', 'bottom']}>
@@ -105,6 +107,43 @@ export default function ResultScreen() {
               else router.push({ pathname: '/paywall', params: { reportId } });
             }}
           />
+
+          {isStale ? (
+            <>
+              <View style={{ height: t.space.m }} />
+              <Card>
+                <Text style={{ color: t.colors.text, fontWeight: '900', fontSize: 16, marginBottom: 6 }}>
+                  {i18n.t('modelUpdatedTitle')}
+                </Text>
+                <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22, marginBottom: t.space.m }}>
+                  {i18n.t('modelUpdatedBody')}
+                </Text>
+                <Pressable
+                  onPress={async () => {
+                    const updated: Report = {
+                      ...report,
+                      outputs: computeRisk(report.inputs),
+                      modelVersion: MODEL_VERSION,
+                    };
+                    await saveReport(updated);
+                    setReport(updated);
+                  }}
+                  style={({ pressed }) => ({
+                    alignSelf: 'flex-start',
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: t.colors.border,
+                    backgroundColor: t.colors.surface2,
+                    opacity: pressed ? 0.9 : 1,
+                  })}
+                >
+                  <Text style={{ color: t.colors.text, fontWeight: '800' }}>{i18n.t('recalculate')}</Text>
+                </Pressable>
+              </Card>
+            </>
+          ) : null}
 
           <View style={{ height: t.space.xl }} />
 
