@@ -25,6 +25,8 @@ function ThemedStack() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="result" options={{ title: '' }} />
+      <Stack.Screen name="detailed" options={{ title: '' }} />
+      <Stack.Screen name="paywall" options={{ title: '' }} />
     </Stack>
   );
 }

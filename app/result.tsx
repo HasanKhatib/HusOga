@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getReport } from '../src/core/services/storage';
 import { i18n } from '../src/i18n/translations';
 import type { Report, LifecycleFlag } from '../src/core/models/types';
-import { Banner, Card, PageHeader, Screen, SectionTitle } from '../src/ui/components';
+import { Banner, Card, PageHeader, PrimaryButton, Screen, SectionTitle } from '../src/ui/components';
 import { useTheme } from '../src/ui/ThemeProvider';
+import { useSettings } from '../src/context/SettingsContext';
 
 function formatSEK(amount: number): string {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} MSEK`;
@@ -59,6 +60,8 @@ export default function ResultScreen() {
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
   const [report, setReport] = useState<Report | null>(null);
   const t = useTheme();
+  const router = useRouter();
+  const { settings, isDevUnlocked } = useSettings();
 
   useEffect(() => {
     if (reportId) getReport(reportId).then(setReport);
@@ -73,6 +76,7 @@ export default function ResultScreen() {
   }
 
   const { outputs } = report;
+  const entitled = settings.purchased || isDevUnlocked;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }} edges={['top', 'bottom']}>
@@ -91,6 +95,16 @@ export default function ResultScreen() {
               <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.text2 }}>/100</Text>
             </View>
           </Card>
+
+          <View style={{ height: t.space.l }} />
+
+          <PrimaryButton
+            label={i18n.t('viewDetailedReport')}
+            onPress={() => {
+              if (entitled) router.push({ pathname: '/detailed', params: { reportId } });
+              else router.push({ pathname: '/paywall', params: { reportId } });
+            }}
+          />
 
           <View style={{ height: t.space.xl }} />
 

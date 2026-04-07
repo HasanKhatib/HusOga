@@ -119,11 +119,24 @@ const en = {
   // Result screen
   costEstimate: 'Cost estimate (5–10 years)',
   lifecycleFlags: 'Lifecycle Flags',
+  viewDetailedReport: 'View detailed report',
   minCost: 'Min',
   likelyCost: 'Likely',
   maxCost: 'Max',
   negotiationChecklist: 'Negotiation checklist',
   disclaimer: 'This assessment is not a replacement for a professional inspection. HusÖga is not affiliated with Boverket or Folkhälsomyndigheten.',
+
+  // Detailed report / paywall
+  detailedReportTitle: 'Detailed report',
+  comingSoon: 'Coming soon',
+  detailedReportPlaceholder: 'Detailed report is a paid feature and is under active development.',
+  upgradeTitle: 'Upgrade',
+  upgradeSubtitle: 'Unlock detailed reports and export',
+  upgradeValueHeader: 'Includes:',
+  upgradeValueDetailed: 'Detailed component breakdown and recommendations',
+  upgradeValueAssumptions: 'Assumptions and lifespans used in the model',
+  upgradeValueExport: 'Share and PDF export',
+  upgradeValueUnlimited: 'Unlimited saved reports',
 
   // Settings
   language: 'Language',
@@ -252,11 +265,23 @@ const sv: typeof en = {
 
   costEstimate: 'Kostnadsbedömning (5–10 år)',
   lifecycleFlags: 'Livslängdsflaggor',
+  viewDetailedReport: 'Visa detaljerad rapport',
   minCost: 'Min',
   likelyCost: 'Troligt',
   maxCost: 'Max',
   negotiationChecklist: 'Förhandlingschecklista',
   disclaimer: 'Denna bedömning ersätter inte en professionell besiktning. HusÖga är inte kopplat till Boverket eller Folkhälsomyndigheten.',
+
+  detailedReportTitle: 'Detaljerad rapport',
+  comingSoon: 'Kommer snart',
+  detailedReportPlaceholder: 'Detaljerad rapport är en betalfunktion och utvecklas just nu.',
+  upgradeTitle: 'Uppgradera',
+  upgradeSubtitle: 'Lås upp detaljerade rapporter och export',
+  upgradeValueHeader: 'Ingår:',
+  upgradeValueDetailed: 'Detaljerad komponentgenomgång och rekommendationer',
+  upgradeValueAssumptions: 'Antaganden och livslängder som används i modellen',
+  upgradeValueExport: 'Delning och PDF-export',
+  upgradeValueUnlimited: 'Obegränsat antal sparade rapporter',
 
   language: 'Språk',
   languageSwedish: 'Svenska',
