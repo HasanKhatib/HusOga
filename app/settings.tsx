@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, Pressable, StyleSheet, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSettings } from '../src/context/SettingsContext';
@@ -5,6 +6,7 @@ import { i18n } from '../src/i18n/translations';
 import { Banner, Card, PageHeader, Screen, SectionTitle, PrimaryButton } from '../src/ui/components';
 import { useTheme } from '../src/ui/ThemeProvider';
 import { unlockPurchased } from '../src/core/services/purchase';
+import { Ionicons } from '@expo/vector-icons';
 
 const isDev = __DEV__;
 
@@ -42,21 +44,38 @@ export default function SettingsScreen() {
 
         <Card>
           <SectionTitle>{i18n.t('appearance')}</SectionTitle>
-          <View style={styles.list}>
-            <Pressable onPress={() => setThemeMode('system')} style={[styles.row, { borderColor: t.colors.border }]}>
-              <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('themeSystem')}</Text>
-              {settings.themeMode === 'system' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
-            </Pressable>
-            <View style={{ height: 1, backgroundColor: t.colors.border }} />
-            <Pressable onPress={() => setThemeMode('light')} style={[styles.row, { borderColor: t.colors.border }]}>
-              <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('themeLight')}</Text>
-              {settings.themeMode === 'light' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
-            </Pressable>
-            <View style={{ height: 1, backgroundColor: t.colors.border }} />
-            <Pressable onPress={() => setThemeMode('dark')} style={[styles.row, { borderColor: t.colors.border }]}>
-              <Text style={[styles.rowText, { color: t.colors.text }]}>{i18n.t('themeDark')}</Text>
-              {settings.themeMode === 'dark' ? <Text style={[styles.check, { color: t.colors.ok }]}>✓</Text> : null}
-            </Pressable>
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 10,
+              backgroundColor: t.isDark ? '#0B1220' : '#F1F3F8',
+              borderRadius: 16,
+              padding: 10,
+              borderWidth: 1,
+              borderColor: t.colors.border,
+            }}
+          >
+            <ThemeChip
+              mode="system"
+              selected={settings.themeMode === 'system'}
+              onPress={() => setThemeMode('system')}
+              icon="phone-portrait-outline"
+              label={i18n.t('themeSystem')}
+            />
+            <ThemeChip
+              mode="light"
+              selected={settings.themeMode === 'light'}
+              onPress={() => setThemeMode('light')}
+              icon="sunny-outline"
+              label={i18n.t('themeLight')}
+            />
+            <ThemeChip
+              mode="dark"
+              selected={settings.themeMode === 'dark'}
+              onPress={() => setThemeMode('dark')}
+              icon="moon-outline"
+              label={i18n.t('themeDark')}
+            />
           </View>
         </Card>
 
@@ -119,3 +138,45 @@ const styles = StyleSheet.create({
   rowText: { fontSize: 18, fontWeight: '700' },
   check: { fontSize: 18, fontWeight: '900' },
 });
+
+function ThemeChip({
+  mode,
+  selected,
+  onPress,
+  icon,
+  label,
+}: {
+  mode: 'system' | 'light' | 'dark';
+  selected: boolean;
+  onPress: () => void;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [
+        {
+          flex: 1,
+          height: 52,
+          borderRadius: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: selected ? t.colors.brand : t.colors.surface,
+          borderWidth: 1,
+          borderColor: selected ? t.colors.brand : t.colors.border,
+          opacity: pressed ? 0.92 : 1,
+        },
+      ]}
+    >
+      <Ionicons
+        name={icon}
+        size={22}
+        color={selected ? t.colors.brandOn : t.colors.text2}
+      />
+    </Pressable>
+  );
+}
