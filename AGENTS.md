@@ -18,6 +18,17 @@ npm run android        # expo start --android
 
 No codegen, no build steps, no pre-commit hooks.
 
+---
+
+## Workflow (GitHub Issues)
+
+Use GitHub Issues for all meaningful work so changes are easy to audit and revert.
+
+- Create or pick an issue before making changes (feature/bug/refactor/deps/design).
+- Small chores can be grouped under one meta issue.
+- Every commit message must reference an issue in the subject: `refs #123`.
+  Example: `fix(ui): align theme chips (refs #123)`
+
 ## Running a Single Test File
 
 ```bash
