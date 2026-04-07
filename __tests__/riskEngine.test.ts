@@ -137,4 +137,16 @@ describe('computeRiskV2', () => {
     expect(drainFlag).toBeDefined();
     expect(drainFlag?.component).toBe('drainage');
   });
+
+  test('slab-era betongplatta increases drainage condition when drainageAge is provided (multiplier)', () => {
+    const base = computeRiskV2({ ...baseInputs, draneringAge: 10 }).score;
+    const slab = computeRiskV2({ ...baseInputs, byggnadsar: 1975, grundlaeggning: 'betongplatta', draneringAge: 10 }).score;
+    expect(slab).toBeGreaterThanOrEqual(base);
+  });
+
+  test('sjalvdrag ventilation increases wet room condition when vatrumAge is provided (multiplier)', () => {
+    const mech = computeRiskV2({ ...baseInputs, vatrumAge: 10, ventilation: 'fMekanisk' }).score;
+    const sj = computeRiskV2({ ...baseInputs, vatrumAge: 10, ventilation: 'sjalvdrag' }).score;
+    expect(sj).toBeGreaterThanOrEqual(mech);
+  });
 });

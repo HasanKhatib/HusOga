@@ -99,6 +99,8 @@ export function computeRiskV2(inputs: HouseInputs): RiskOutput {
     triggeredBy: string[];
   }[] = [];
 
+  const slab70s = inputs.byggnadsar >= 1965 && inputs.byggnadsar <= 1985 && inputs.grundlaeggning === 'betongplatta';
+
   // Roof
   const roofLifespan = roofLifespans[inputs.yttertakType] ?? roofLifespans.other;
   const roofC = clamp01(conditionFromRatio(inputs.yttertakAge / roofLifespan));
@@ -110,12 +112,26 @@ export function computeRiskV2(inputs: HouseInputs): RiskOutput {
   components.push({ key: 'facade', component: 'facade', condition: facadeC, triggeredBy: ['fasadType', 'fasadAge'] });
 
   // Drainage (optional direct input)
-  const drainageC = inputs.draneringAge == null ? 0 : clamp01(conditionFromRatio(inputs.draneringAge / drainageLifespan));
-  components.push({ key: 'drainage', component: 'drainage', condition: drainageC, triggeredBy: ['draneringAge'] });
+  let drainageC = inputs.draneringAge == null ? 0 : clamp01(conditionFromRatio(inputs.draneringAge / drainageLifespan));
+  const drainageTriggeredBy = ['draneringAge'];
+  if (slab70s && inputs.draneringAge != null) {
+    drainageC = clamp01(drainageC * 1.15);
+    drainageTriggeredBy.push('byggnadsar', 'grundlaeggning');
+  }
+  components.push({ key: 'drainage', component: 'drainage', condition: drainageC, triggeredBy: drainageTriggeredBy });
 
   // Wet rooms (optional)
-  const wetRoomsC = inputs.vatrumAge == null ? 0 : clamp01(conditionFromRatio(inputs.vatrumAge / vatrumLifespan));
-  components.push({ key: 'wetRooms', component: 'wetRooms', condition: wetRoomsC, triggeredBy: ['vatrumAge'] });
+  let wetRoomsC = inputs.vatrumAge == null ? 0 : clamp01(conditionFromRatio(inputs.vatrumAge / vatrumLifespan));
+  const wetRoomsTriggeredBy = ['vatrumAge'];
+  if (slab70s && inputs.vatrumAge != null) {
+    wetRoomsC = clamp01(wetRoomsC * 1.05);
+    wetRoomsTriggeredBy.push('byggnadsar', 'grundlaeggning');
+  }
+  if (inputs.ventilation === 'sjalvdrag' && inputs.vatrumAge != null) {
+    wetRoomsC = clamp01(wetRoomsC * 1.1);
+    wetRoomsTriggeredBy.push('ventilation');
+  }
+  components.push({ key: 'wetRooms', component: 'wetRooms', condition: wetRoomsC, triggeredBy: wetRoomsTriggeredBy });
 
   // Ventilation (type-based)
   const ventC = clamp01(ventilationCondition(inputs));
@@ -150,7 +166,6 @@ export function computeRiskV2(inputs: HouseInputs): RiskOutput {
 
   // Special rule: keep the slab-era drainage warning as a discrete flag for explainability.
   const hasDrainageFlag = flagged.some((f) => f.component === 'drainage');
-  const slab70s = inputs.byggnadsar >= 1965 && inputs.byggnadsar <= 1985 && inputs.grundlaeggning === 'betongplatta';
   if (slab70s && !hasDrainageFlag) {
     flagged.push({
       component: 'drainage',
