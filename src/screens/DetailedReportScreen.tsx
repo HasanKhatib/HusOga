@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,12 +11,17 @@ import { useTheme } from '../ui/ThemeProvider';
 import { drainageLifespan, fasadLifespans, roofLifespans, vatrumLifespan } from '../core/data/lifespans';
 import { drainageCost, fasadCostPerSqm, roofCosts, vatrumCost } from '../core/data/costs';
 import { SOURCES, TOPIC_ORDER, type Source, type SourceTopic } from '../core/data/sources';
+import { useSettings } from '../context/SettingsContext';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 export default function DetailedReportScreen() {
   const t = useTheme();
   const router = useRouter();
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
   const [report, setReport] = useState<Report | null>(null);
+  const { settings, isDevUnlocked } = useSettings();
+  const entitled = settings.purchased || isDevUnlocked;
 
   useEffect(() => {
     if (reportId) getReport(reportId).then(setReport);
@@ -52,6 +57,67 @@ export default function DetailedReportScreen() {
                   </Text>
                 </View>
                 <View style={{ height: t.space.m }} />
+
+                <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+                  <Pressable
+                    onPress={async () => {
+                      if (!entitled) {
+                        router.push({ pathname: '/paywall', params: { reportId } });
+                        return;
+                      }
+                      if (Platform.OS === 'web') {
+                        Alert.alert('', i18n.t('exportNotAvailableOnWeb'));
+                        return;
+                      }
+                      const text = buildShareText(report);
+                      await Share.share({ title: i18n.t('shareTitle'), message: text });
+                    }}
+                    style={({ pressed }) => ({
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: t.colors.border,
+                      backgroundColor: t.colors.surface2,
+                      opacity: pressed ? 0.9 : 1,
+                    })}
+                  >
+                    <Text style={{ color: t.colors.text, fontWeight: '900' }}>{i18n.t('exportShare')}</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={async () => {
+                      if (!entitled) {
+                        router.push({ pathname: '/paywall', params: { reportId } });
+                        return;
+                      }
+                      if (Platform.OS === 'web') {
+                        Alert.alert('', i18n.t('exportNotAvailableOnWeb'));
+                        return;
+                      }
+
+                      const html = buildPdfHtml(report);
+                      const { uri } = await Print.printToFileAsync({ html, base64: false });
+                      if (!(await Sharing.isAvailableAsync())) {
+                        Alert.alert('', i18n.t('exportedPdf'));
+                        return;
+                      }
+                      await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
+                    }}
+                    style={({ pressed }) => ({
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: t.colors.border,
+                      backgroundColor: t.colors.surface2,
+                      opacity: pressed ? 0.9 : 1,
+                    })}
+                  >
+                    <Text style={{ color: t.colors.text, fontWeight: '900' }}>{i18n.t('exportPdf')}</Text>
+                  </Pressable>
+                </View>
+
                 {topFlags.length === 0 ? (
                   <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22 }}>
                     {i18n.t('noMajorRisks')}
@@ -120,6 +186,76 @@ export default function DetailedReportScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function buildShareText(report: Report): string {
+  const out = report.outputs;
+  const lines: string[] = [];
+  lines.push(`HusÖga - ${report.houseLabel || 'Report'}`);
+  lines.push(`Score: ${out.score}/100 (${out.scoreBand})`);
+  lines.push(`Cost (5-10y): min ${formatSEK(out.costBand.min)}, likely ${formatSEK(out.costBand.likely)}, max ${formatSEK(out.costBand.max)}`);
+  if (out.lifecycleFlags.length > 0) {
+    lines.push('');
+    lines.push('Top findings:');
+    for (const f of [...out.lifecycleFlags].sort((a, b) => b.contributionPercent - a.contributionPercent).slice(0, 5)) {
+      lines.push(`- ${f.component}: ${f.level} (${f.contributionPercent}%)`);
+    }
+  }
+  lines.push('');
+  lines.push(i18n.t('disclaimer'));
+  return lines.join('\n');
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function buildPdfHtml(report: Report): string {
+  const out = report.outputs;
+  const title = escapeHtml(report.houseLabel || 'HusÖga report');
+  const flags = [...out.lifecycleFlags]
+    .sort((a, b) => b.contributionPercent - a.contributionPercent)
+    .map((f) => `<li><strong>${escapeHtml(f.component)}</strong>: ${escapeHtml(f.level)} (${f.contributionPercent}%)</li>`)
+    .join('');
+
+  return `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; color: #0B1220; }
+        h1 { font-size: 24px; margin: 0 0 8px; }
+        .muted { color: #5B677A; }
+        .card { border: 1px solid #E6E8EF; border-radius: 14px; padding: 16px; margin: 16px 0; }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .pill { border: 1px solid #E6E8EF; border-radius: 999px; padding: 8px 12px; font-weight: 700; }
+        ul { margin: 8px 0 0 18px; }
+        .disclaimer { font-size: 12px; color: #5B677A; margin-top: 24px; }
+      </style>
+    </head>
+    <body>
+      <h1>${title}</h1>
+      <div class="muted">HusÖga detailed report</div>
+      <div class="card">
+        <div class="row">
+          <div class="pill">Score: ${out.score}/100 (${escapeHtml(out.scoreBand)})</div>
+          <div class="pill">Cost (5-10y): ${formatSEK(out.costBand.likely)}</div>
+        </div>
+        <div style="margin-top: 12px" class="muted">Cost band: min ${formatSEK(out.costBand.min)}, likely ${formatSEK(out.costBand.likely)}, max ${formatSEK(out.costBand.max)}</div>
+      </div>
+      <div class="card">
+        <strong>Findings</strong>
+        <ul>${flags || '<li>No major risks flagged.</li>'}</ul>
+      </div>
+      <div class="disclaimer">${escapeHtml(i18n.t('disclaimer'))}</div>
+    </body>
+  </html>`;
 }
 
 function topicLabel(topic: SourceTopic): string {
