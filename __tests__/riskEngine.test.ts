@@ -1,0 +1,102 @@
+import { computeRisk } from '../src/core/services/riskEngine';
+import type { HouseInputs, LifecycleFlag } from '../src/core/models/types';
+
+const baseInputs: HouseInputs = {
+  byggnadstyp: 'enplanshus',
+  byggnadsar: 2020,
+  size: 120,
+  grundlaeggning: 'krypgrund',
+  yttertakType: 'betongpannor',
+  yttertakAge: 2,
+  fasadType: 'tegel',
+  fasadAge: 5,
+  uppvarmning: 'bergvarme',
+  ventilation: 'ftxMekanisk',
+};
+
+describe('computeRisk', () => {
+  test('score is low for a new well-maintained house', () => {
+    const result = computeRisk(baseInputs);
+    expect(result.score).toBeLessThanOrEqual(20);
+    expect(result.scoreBand).toBe('low');
+    expect(result.lifecycleFlags).toHaveLength(0);
+    expect(result.costBand.min).toBeGreaterThanOrEqual(0);
+  });
+
+  test('flags roof when age exceeds 70% of lifespan', () => {
+    // takpapp lifespan = 20; 18/20 = 0.9 >= 0.9 → highRisk
+    const inputs: HouseInputs = { ...baseInputs, yttertakType: 'takpapp', yttertakAge: 18 };
+    const result = computeRisk(inputs);
+    const roofFlag = result.lifecycleFlags.find((f) => f.component === 'roof');
+    expect(roofFlag).toBeDefined();
+    expect(roofFlag?.level).toBe('highRisk');
+    expect(result.score).toBeGreaterThan(0);
+  });
+
+  test('roof risk (not high) at 70%–89% of lifespan', () => {
+    // takpapp lifespan = 20; 15/20 = 0.75 → risk
+    const inputs: HouseInputs = { ...baseInputs, yttertakType: 'takpapp', yttertakAge: 15 };
+    const result = computeRisk(inputs);
+    const roofFlag = result.lifecycleFlags.find((f) => f.component === 'roof');
+    expect(roofFlag?.level).toBe('risk');
+  });
+
+  test('checklist always contains base items', () => {
+    const result = computeRisk(baseInputs);
+    expect(result.negotiationChecklist).toContain('askSellerRoofFacadeDrainage');
+    expect(result.negotiationChecklist).toContain('demandBuyerInspection');
+  });
+
+  test('betongplatta 70s rule adds drainage flag when no drainage input given', () => {
+    const inputs: HouseInputs = { ...baseInputs, byggnadsar: 1975, grundlaeggning: 'betongplatta' };
+    const result = computeRisk(inputs);
+    const drainFlag = result.lifecycleFlags.find((f) => f.component === 'drainage');
+    expect(drainFlag).toBeDefined();
+    expect(drainFlag?.messageKey).toBe('betongplatta70s');
+    expect(drainFlag?.triggeredBy).toContain('byggnadsar');
+    expect(drainFlag?.triggeredBy).toContain('grundlaeggning');
+  });
+
+  test('betongplatta 70s rule does NOT double-add when draneringAge already flags', () => {
+    // draneringAge 23/25 = 0.92 → highRisk drainage; betongplatta 70s should not add a second
+    const inputs: HouseInputs = { ...baseInputs, byggnadsar: 1975, grundlaeggning: 'betongplatta', draneringAge: 23 };
+    const result = computeRisk(inputs);
+    const drainFlags = result.lifecycleFlags.filter((f) => f.component === 'drainage');
+    expect(drainFlags).toHaveLength(1);
+  });
+
+  test('direct electric heating adds heating flag', () => {
+    const inputs: HouseInputs = { ...baseInputs, uppvarmning: 'direktverkandeEl' };
+    const result = computeRisk(inputs);
+    expect(result.lifecycleFlags.some((f) => f.component === 'heating')).toBe(true);
+  });
+
+  test('sjalvdrag ventilation adds ventilation flag', () => {
+    const inputs: HouseInputs = { ...baseInputs, ventilation: 'sjalvdrag' };
+    const result = computeRisk(inputs);
+    expect(result.lifecycleFlags.some((f) => f.component === 'ventilation')).toBe(true);
+  });
+
+  test('score is clamped to 0–100', () => {
+    // Max possible: roof highRisk(25) + facade highRisk(20) + drainage highRisk(15) + ventilation(10) + heating(8) + wetRooms highRisk(12) = 90
+    const inputs: HouseInputs = {
+      byggnadstyp: 'enplanshus', byggnadsar: 1970, size: 120,
+      grundlaeggning: 'krypgrund',
+      yttertakType: 'takpapp', yttertakAge: 19,   // 19/20 = 0.95 → highRisk
+      fasadType: 'puts', fasadAge: 28,             // 28/30 = 0.93 → highRisk
+      uppvarmning: 'direktverkandeEl',
+      ventilation: 'sjalvdrag',
+      draneringAge: 24,  // 24/25 = 0.96 → highRisk
+      vatrumAge: 19,     // 19/20 = 0.95 → highRisk
+    };
+    const result = computeRisk(inputs);
+    expect(result.score).toBeLessThanOrEqual(100);
+    expect(result.score).toBeGreaterThan(0);
+  });
+
+  test('tegel facade is skipped (no lifespan)', () => {
+    const inputs: HouseInputs = { ...baseInputs, fasadType: 'tegel', fasadAge: 100 };
+    const result = computeRisk(inputs);
+    expect(result.lifecycleFlags.some((f) => f.component === 'facade')).toBe(false);
+  });
+});
