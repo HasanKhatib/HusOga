@@ -1,4 +1,4 @@
-import { computeRisk } from '../src/core/services/riskEngine';
+import { computeRisk, computeRiskV2, conditionFromRatio } from '../src/core/services/riskEngine';
 import type { HouseInputs, LifecycleFlag } from '../src/core/models/types';
 
 const baseInputs: HouseInputs = {
@@ -98,5 +98,43 @@ describe('computeRisk', () => {
     const inputs: HouseInputs = { ...baseInputs, fasadType: 'tegel', fasadAge: 100 };
     const result = computeRisk(inputs);
     expect(result.lifecycleFlags.some((f) => f.component === 'facade')).toBe(false);
+  });
+});
+
+describe('conditionFromRatio (v2)', () => {
+  test('is clamped to [0..1] and monotonic-ish over increasing ratio', () => {
+    const ratios = [0, 0.1, 0.5, 0.7, 0.9, 1.1, 2.0];
+    const vals = ratios.map(conditionFromRatio);
+    for (const v of vals) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+    for (let i = 1; i < vals.length; i++) {
+      expect(vals[i]).toBeGreaterThanOrEqual(vals[i - 1]);
+    }
+  });
+});
+
+describe('computeRiskV2', () => {
+  test('produces a low score for a modern house baseline', () => {
+    const result = computeRiskV2(baseInputs);
+    expect(result.scoreBand).toBe('low');
+    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.score).toBeLessThan(35);
+  });
+
+  test('score increases when roof age increases (all else equal)', () => {
+    const a = computeRiskV2({ ...baseInputs, yttertakType: 'takpapp', yttertakAge: 2 }).score;
+    const b = computeRiskV2({ ...baseInputs, yttertakType: 'takpapp', yttertakAge: 10 }).score;
+    const c = computeRiskV2({ ...baseInputs, yttertakType: 'takpapp', yttertakAge: 18 }).score;
+    expect(b).toBeGreaterThanOrEqual(a);
+    expect(c).toBeGreaterThanOrEqual(b);
+  });
+
+  test('slab-era betongplatta emits the betongplatta70s drainage flag when drainageAge not provided', () => {
+    const result = computeRiskV2({ ...baseInputs, byggnadsar: 1975, grundlaeggning: 'betongplatta' });
+    const drainFlag = result.lifecycleFlags.find((f) => f.messageKey === 'betongplatta70s');
+    expect(drainFlag).toBeDefined();
+    expect(drainFlag?.component).toBe('drainage');
   });
 });
