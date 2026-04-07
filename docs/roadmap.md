@@ -36,7 +36,7 @@ Tasks:
 - [x] #27 Spec: Basic vs Detailed report content (free vs paid)
 - [x] #28 UI: add CTA to view Detailed report and paywall for free users
 - [x] #29 UI: build Detailed report screen (paid)
-- [ ] #42 fix(ui): clarify cost highlight in dark mode
+- [x] #42 fix(ui): clarify cost highlight in dark mode
 - [ ] #30 Paid: export/share report (text share)
 - [ ] #31 Paid: generate PDF from report
 
