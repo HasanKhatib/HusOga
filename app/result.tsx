@@ -183,6 +183,31 @@ export default function ResultScreen() {
 
           <View style={{ height: t.space.xl }} />
 
+          <Card>
+            <SectionTitle>{i18n.t('sources')}</SectionTitle>
+            <Pressable
+              onPress={() => router.push('/sources')}
+              style={({ pressed }) => ({
+                alignSelf: 'flex-start',
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: t.colors.border,
+                backgroundColor: t.colors.surface2,
+                opacity: pressed ? 0.9 : 1,
+              })}
+            >
+              <Text style={{ color: t.colors.text, fontWeight: '800' }}>{i18n.t('sources')}</Text>
+            </Pressable>
+            <View style={{ height: 10 }} />
+            <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22 }}>
+              {i18n.t('sourcesIntro')}
+            </Text>
+          </Card>
+
+          <View style={{ height: t.space.xl }} />
+
           <Banner text={i18n.t('disclaimer')} />
         </Screen>
       </ScrollView>
