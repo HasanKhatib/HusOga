@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getSettings, saveSettings } from '../core/services/settings';
+import * as Localization from 'expo-localization';
+import { getDevUnlock, getSettings, saveSettings, setDevUnlock } from '../core/services/settings';
 import { i18n } from '../i18n/translations';
 import type { AppSettings } from '../core/models/types';
 
@@ -17,10 +18,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [isDevUnlocked, setIsDevUnlocked] = useState(false);
 
   useEffect(() => {
-    getSettings().then((s) => {
-      setSettings(s);
-      i18n.locale = s.locale;
-    });
+    (async () => {
+      const s = await getSettings();
+      const dev = await getDevUnlock();
+
+      // If the user never changed locale, prefer device locale (en/sv) else default sv.
+      const device = Localization.getLocales()?.[0]?.languageCode;
+      const resolvedLocale = s.locale ?? (device === 'en' || device === 'sv' ? device : 'sv');
+      const resolved = { ...s, locale: resolvedLocale as 'en' | 'sv' };
+
+      setSettings(resolved);
+      setIsDevUnlocked(dev);
+      i18n.locale = resolved.locale;
+    })();
   }, []);
 
   async function setLocale(locale: 'en' | 'sv') {
@@ -30,8 +40,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     await saveSettings(updated);
   }
 
+  async function setDev(val: boolean) {
+    setIsDevUnlocked(val);
+    await setDevUnlock(val);
+  }
+
   return (
-    <SettingsContext.Provider value={{ settings, setLocale, isDevUnlocked, setDevUnlock: setIsDevUnlocked }}>
+    <SettingsContext.Provider value={{ settings, setLocale, isDevUnlocked, setDevUnlock: setDev }}>
       {children}
     </SettingsContext.Provider>
   );

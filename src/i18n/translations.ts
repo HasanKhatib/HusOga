@@ -10,6 +10,7 @@ const en = {
   houseData: 'House Data',
   result: 'Result',
   settings: 'Settings',
+  newAssessment: 'New assessment',
 
   // Report list
   noReportsYet: 'No reports yet',
@@ -42,6 +43,9 @@ const en = {
   drainageAge: 'Drainage age (years, optional)',
   wetRoomsAge: 'Wet rooms age (years, optional)',
   calculate: 'Calculate',
+  calculateRisk: 'Calculate Risk',
+  requiredFields: 'Required Fields',
+  optionalFields: 'Optional Fields',
 
   // Building types
   enplanshus: 'Single-storey house',
@@ -114,6 +118,7 @@ const en = {
 
   // Result screen
   costEstimate: 'Cost estimate (5–10 years)',
+  lifecycleFlags: 'Lifecycle Flags',
   minCost: 'Min',
   likelyCost: 'Likely',
   maxCost: 'Max',
@@ -125,6 +130,14 @@ const en = {
   languageSwedish: 'Swedish',
   languageEnglish: 'English',
   devUnlock: 'Unlock paid features (dev)',
+  purchaseStatus: 'Purchase Status',
+  freeOneReport: 'Free (1 report)',
+  paidUnlimited: 'Paid (unlimited)',
+  upgradeForUnlimited: 'Upgrade for unlimited reports',
+  upgrade: 'Upgrade',
+  restorePurchases: 'Restore Purchases',
+  upgraded: 'Upgraded',
+  restoreNotImplemented: 'Restore purchases not implemented yet',
 
   // Errors
   required: 'Required',
@@ -138,6 +151,7 @@ const sv: typeof en = {
   houseData: 'Husdata',
   result: 'Resultat',
   settings: 'Inställningar',
+  newAssessment: 'Ny bedömning',
 
   noReportsYet: 'Inga rapporter än',
   createFirstAssessment: 'Tryck på + för att göra din första bedömning',
@@ -168,6 +182,9 @@ const sv: typeof en = {
   drainageAge: 'Dräneringens ålder (år, valfritt)',
   wetRoomsAge: 'Våtrummens ålder (år, valfritt)',
   calculate: 'Beräkna',
+  calculateRisk: 'Beräkna risk',
+  requiredFields: 'Obligatoriska fält',
+  optionalFields: 'Valfria fält',
 
   enplanshus: 'Enplanshus',
   'tvåplanshus': 'Tvåplanshus',
@@ -230,6 +247,7 @@ const sv: typeof en = {
   roofSnowCheck: 'Kontrollera bärförmåga och snöräcken',
 
   costEstimate: 'Kostnadsbedömning (5–10 år)',
+  lifecycleFlags: 'Livslängdsflaggor',
   minCost: 'Min',
   likelyCost: 'Troligt',
   maxCost: 'Max',
@@ -240,6 +258,14 @@ const sv: typeof en = {
   languageSwedish: 'Svenska',
   languageEnglish: 'Engelska',
   devUnlock: 'Lås upp betalfunktioner (dev)',
+  purchaseStatus: 'Köpstatus',
+  freeOneReport: 'Gratis (1 rapport)',
+  paidUnlimited: 'Betald (obegränsat)',
+  upgradeForUnlimited: 'Uppgradera för obegränsat antal rapporter',
+  upgrade: 'Uppgradera',
+  restorePurchases: 'Återställ köp',
+  upgraded: 'Uppgraderad',
+  restoreNotImplemented: 'Återställning av köp är inte implementerat än',
 
   required: 'Obligatoriskt',
 };
