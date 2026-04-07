@@ -225,6 +225,10 @@ function CostPill({
   highlight?: boolean;
 }) {
   const t = useTheme();
+  const highlightBg = t.isDark ? '#141F31' : t.colors.brand;
+  const highlightBorder = t.isDark ? t.colors.info : t.colors.brand;
+  const highlightLabel = t.isDark ? '#BFD3FF' : '#C7D0E0';
+  const highlightValue = t.isDark ? '#E8EEF8' : '#fff';
   return (
     <View
       style={{
@@ -233,15 +237,15 @@ function CostPill({
         paddingVertical: 14,
         paddingHorizontal: 10,
         alignItems: 'center',
-        backgroundColor: highlight ? t.colors.brand : (t.isDark ? '#0B1220' : '#F1F3F8'),
-        borderWidth: 1,
-        borderColor: t.colors.border,
+        backgroundColor: highlight ? highlightBg : (t.isDark ? '#0B1220' : '#F1F3F8'),
+        borderWidth: highlight ? 1.5 : 1,
+        borderColor: highlight ? highlightBorder : t.colors.border,
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '800', color: highlight ? '#C7D0E0' : t.colors.text2, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+      <Text style={{ fontSize: 11, fontWeight: '800', color: highlight ? highlightLabel : t.colors.text2, letterSpacing: 0.6, textTransform: 'uppercase' }}>
         {label}
       </Text>
-      <Text style={{ fontSize: 16, fontWeight: '900', marginTop: 4, color: highlight ? '#fff' : t.colors.text }}>
+      <Text style={{ fontSize: 16, fontWeight: '900', marginTop: 4, color: highlight ? highlightValue : t.colors.text }}>
         {value}
       </Text>
     </View>
