@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { v4 as uuidv4 } from 'uuid';
+import { uuidv4 } from '../core/utils/uuid';
 
 import type {
   Byggnadstyp,
@@ -142,7 +142,7 @@ export default function FormScreen() {
     }
 
     setErrors({});
-    const id = existingId ?? uuidv4();
+    const id = existingId ?? (await uuidv4());
     setExistingId(id);
     const report = await persist(id);
     router.push({ pathname: '/result', params: { reportId: report.id } });
