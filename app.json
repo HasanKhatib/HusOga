@@ -32,6 +32,13 @@
       "expo-localization",
       "./plugins/withAndroidBillingPermission"
     ],
-    "scheme": "husoga"
+    "scheme": "husoga",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9fa7fdc7-7c0b-4be1-ba25-de49a995e737"
+      }
+    },
+    "owner": "hasankhatib"
   }
 }
