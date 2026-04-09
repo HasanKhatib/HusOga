@@ -33,6 +33,7 @@ What you typically need:
 ### 2) Create the App in App Store Connect
 
 1. Go to App Store Connect → My Apps → +
+- App Name: HusÖga
 2. Create a new app
 3. Choose:
    - Platform: iOS
@@ -57,8 +58,8 @@ Important:
 2. Create a **Non-Consumable** product
 
 You will define:
-- Product ID (string): e.g. `com.husoga.unlock`
-- Reference name
+- Product ID (string): e.g. `com.husoga.pro`
+- Reference name: HusÖga Pro
 - Price tier
 - Localizations (sv/en recommended)
 - Review screenshot (may be required)

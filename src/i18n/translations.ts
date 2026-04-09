@@ -182,6 +182,12 @@ const en = {
   restorePurchases: 'Restore Purchases',
   upgraded: 'Upgraded',
   restoreNotImplemented: 'Restore purchases not implemented yet',
+  androidIapPending: 'Android purchases are not set up yet. Please use iOS for now.',
+  noPurchaseFound: 'No previous purchase found to restore.',
+  iapUnavailable: 'Purchases are not available in this build. Use a development build or App Store/TestFlight.',
+  purchaseCancelled: 'Purchase cancelled.',
+  purchaseFailed: 'Purchase failed. Please try again.',
+  purchaseTimeout: 'Purchase timed out. Please try again.',
 
   // Errors
   required: 'Required',
@@ -353,6 +359,12 @@ const sv: typeof en = {
   restorePurchases: 'Återställ köp',
   upgraded: 'Uppgraderad',
   restoreNotImplemented: 'Återställning av köp är inte implementerat än',
+  androidIapPending: 'Android-köp är inte konfigurerade än. Använd iOS tills vidare.',
+  noPurchaseFound: 'Inget tidigare köp hittades att återställa.',
+  iapUnavailable: 'Köp är inte tillgängliga i den här bygget. Använd ett development build eller App Store/TestFlight.',
+  purchaseCancelled: 'Köpet avbröts.',
+  purchaseFailed: 'Köpet misslyckades. Försök igen.',
+  purchaseTimeout: 'Köpet tog för lång tid. Försök igen.',
 
   required: 'Obligatoriskt',
 };

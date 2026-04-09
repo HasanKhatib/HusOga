@@ -1,11 +1,20 @@
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { i18n } from '../i18n/translations';
 import { Card, PageHeader, PrimaryButton, Screen } from '../ui/components';
 import { useTheme } from '../ui/ThemeProvider';
-import { unlockPurchased } from '../core/services/purchase';
+import { restorePro, upgradeToPro } from '../core/services/purchase';
+
+function messageForPending(reason: string): string {
+  if (reason === 'android_purchase_setup_pending') return i18n.t('androidIapPending');
+  if (reason === 'no_prior_purchase_found') return i18n.t('noPurchaseFound');
+  if (reason === 'iap_unavailable') return i18n.t('iapUnavailable');
+  if (reason === 'purchase_cancelled') return i18n.t('purchaseCancelled');
+  if (reason === 'purchase_timeout') return i18n.t('purchaseTimeout');
+  return i18n.t('purchaseFailed');
+}
 
 export default function PaywallScreen() {
   const t = useTheme();
@@ -42,8 +51,34 @@ export default function PaywallScreen() {
             <PrimaryButton
               label={i18n.t('upgrade')}
               onPress={async () => {
-                // Stubbed purchase flow for now.
-                await unlockPurchased();
+                const res = await upgradeToPro();
+                if (res.kind === 'pending') {
+                  Alert.alert('', messageForPending(res.reason));
+                  return;
+                }
+                if (res.kind === 'unsupported') {
+                  Alert.alert('', i18n.t('exportNotAvailableOnWeb'));
+                  return;
+                }
+                if (reportId) router.replace({ pathname: '/detailed', params: { reportId } });
+                else router.back();
+              }}
+            />
+
+            <View style={{ height: t.space.m }} />
+
+            <PrimaryButton
+              label={i18n.t('restorePurchases')}
+              onPress={async () => {
+                const res = await restorePro();
+                if (res.kind === 'pending') {
+                  Alert.alert('', messageForPending(res.reason));
+                  return;
+                }
+                if (res.kind === 'unsupported') {
+                  Alert.alert('', i18n.t('exportNotAvailableOnWeb'));
+                  return;
+                }
                 if (reportId) router.replace({ pathname: '/detailed', params: { reportId } });
                 else router.back();
               }}

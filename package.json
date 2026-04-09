@@ -32,6 +32,7 @@
     "expo": "~54.0.33",
     "expo-clipboard": "~8.0.8",
     "expo-crypto": "~15.0.8",
+    "expo-in-app-purchases": "^14.5.0",
     "expo-linking": "~8.0.11",
     "expo-localization": "~17.0.8",
     "expo-print": "~15.0.8",
