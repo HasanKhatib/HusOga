@@ -8,7 +8,7 @@ HusÖga uses published methods from:
 * Moisture and mold risk research
 * Residential maintenance forecasting
 
-The model combines component age, expected service life, construction era, foundation type, ventilation type, and known Swedish housing risk patterns into a simple house risk snapshot.
+The model combines component age, expected service life, construction era, foundation type, ventilation type, and known Swedish housing risk patterns into a simple HusOga snapshot.
 
 The methodology is informed by Swedish and Nordic sources on:
 

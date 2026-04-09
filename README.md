@@ -1,4 +1,4 @@
-# HusÖga (house-risk-snapshot)
+# HusOga
 
 Offline-only Swedish villa risk assessment app built with React Native + Expo.
 

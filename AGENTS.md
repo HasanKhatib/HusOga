@@ -1,4 +1,4 @@
-# AGENTS.md — house-risk-snapshot (HusÖga)
+# AGENTS.md — HusOga
 
 React Native / Expo app (TypeScript). Offline-only Swedish villa risk assessment tool. No backend, no network, no accounts.
 
