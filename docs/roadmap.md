@@ -62,7 +62,7 @@ Tasks:
 - [x] #36 IAP: implement real purchase + restore (ties to #11)
 - [x] #37 Gating: enforce paid-only features
 
-### 5) Condition Engine v3
+### 5) Condition Engine v3 ✅
 
 Epic: #51
 
@@ -75,32 +75,32 @@ Free/paid split:
 - Paid: decision points, cost forecast, lifetime analysis, green recommendations
 
 Tasks:
-- [ ] #55 6a: New types — ConditionLevel, ComponentCondition, ConditionOutput
-- [ ] #56 6b: Rewrite engine output, viewingTips + greenSignals builders, MODEL_VERSION 2.0.0
-- [ ] #57 6c: i18n — condition framing strings, viewing tips, green signals (both locales)
-- [ ] #58 6d: Localize triggeredBy field name labels (fix #14)
-- [ ] #59 6e: Rewrite riskEngine tests for new ConditionOutput shape
+- [x] #55 6a: New types — ConditionLevel, ComponentCondition, ConditionOutput
+- [x] #56 6b: Rewrite engine output, viewingTips + greenSignals builders, MODEL_VERSION 2.0.0
+- [x] #57 6c: i18n — condition framing strings, viewing tips, green signals (both locales)
+- [x] #58 6d: Localize triggeredBy field name labels (fix #14)
+- [x] #59 6e: Rewrite riskEngine tests for new ConditionOutput shape
 
-### 6) Result Screen Rewrite
+### 6) Result Screen Rewrite ✅
 
 Epic: #52
 
 Tasks:
-- [ ] #60 7a: ComponentRow UI — traffic-light summary card (replaces score card)
-- [ ] #61 7b: Viewing tips section (free)
-- [ ] #62 7c: Decision points section (paid, gated)
-- [ ] #63 7d: Cost forecast section (paid, replaces CostPill row)
-- [ ] #64 7e: Lifetime analysis section (paid, age vs lifespan table)
-- [ ] #65 7f: Green recommendations section (paid)
-- [ ] #66 7g: Report list index — replace score pill with compact traffic-light dots
+- [x] #60 7a: ComponentRow UI — traffic-light summary card (replaces score card)
+- [x] #61 7b: Viewing tips section (free)
+- [x] #62 7c: Decision points section (paid, gated)
+- [x] #63 7d: Cost forecast section (paid, replaces CostPill row)
+- [x] #64 7e: Lifetime analysis section (paid, age vs lifespan table)
+- [x] #65 7f: Green recommendations section (paid)
+- [x] #66 7g: Report list index — replace score pill with compact traffic-light dots
 
-### 7) PDF / Share Rewrite
+### 7) PDF / Share Rewrite ✅
 
 Epic: #53
 
 Tasks:
-- [ ] #67 8a: Rewrite PDF HTML template with traffic-light structure and buyer-quality sections
-- [ ] #68 8b+8c: Update buildShareText to describe traffic-light summary
+- [x] #67 8a: Rewrite PDF HTML template with traffic-light structure and buyer-quality sections
+- [x] #68 8b+8c: Update buildShareText to describe traffic-light summary
 
 ### 8) Website
 

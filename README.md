@@ -70,16 +70,14 @@ Flutter v1 source is preserved on the `flutter-archive` branch.
 
 ## Project Status
 
-**Completed:** Risk engine v2, Basic/Detailed report UX, in-app sources, PDF export, text share, and real IAP wiring are all shipped. iOS product ID `com.husoga.pro` is configured. Android BILLING permission plugin is in place.
+**Completed:** Risk engine v2, Basic/Detailed report UX, in-app sources, IAP wiring, and the full **Condition Engine v3** rewrite are all shipped. The single aggregate score has been replaced with a per-component traffic-light konditionsöversikt (6 rows: Tak, Fasad, Grund, Våtrum, Ventilation, Uppvärmning). Result screen, Detailed screen, PDF export, and share text all reflect the new structure. MODEL_VERSION is 2.0.0.
 
-**In progress (MVP release):** Condition Engine v3 (#51) — replacing the single aggregate score with a per-component traffic-light output. This drives a full result screen rewrite (#52), PDF/share rewrite (#53), and App Store publishing prep (#54). Strategy documented in `docs/strategy.md`.
-
-**Free/paid split (new):**
-- Free: traffic-light konditionsöversikt (6 component rows) + viewing tips
+**Free/paid split:**
+- Free: traffic-light konditionsöversikt (6 rows) + viewing tips
 - Paid: decision points, cost forecast, lifetime analysis, green recommendations, PDF export
 
-**Pending before store submission:** Epics #51–#53 (engine + UI + PDF), website (#72), App Store copy (#70), screenshots (#71), Android adaptive icon fix (#69).
+**Next (Epic 9 — App Store publishing):** Android adaptive icon fix (#69), App Store + Play Store copy (#70), screenshot specs (#71), website with privacy policy (#72), iOS EAS build + TestFlight (#73), Google Play setup (#74).
 
-**Android blockers (carry-over):** Play Console identity verification ongoing (#48). Android EAS build errored (build `0c9374f3`). Both block Android submission — iOS is unblocked.
+**Android blockers (carry-over):** Play Console identity verification ongoing (#48). Android EAS build errored (build `0c9374f3`). iOS submission is unblocked.
 
-_Last updated: 2026-04-10 (refs #51, #52, #53, #54)_
+_Last updated: 2026-04-10 (refs #51, #52, #53, #14)_
