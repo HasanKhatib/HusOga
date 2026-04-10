@@ -8,15 +8,19 @@ This roadmap is a checklist. Items are checked when the linked GitHub issue is c
 
 ## Priority Order
 
-1. Risk Engine v2 (logic)
-2. Report UX (basic vs detailed, paywall)
-3. Sources & references (in-app)
-4. Plans + IAP (free vs paid rules)
-5. Website (single HTML page)
+1. ~~Risk Engine v2 (logic)~~ ✅
+2. ~~Report UX (basic vs detailed, paywall)~~ ✅
+3. ~~Sources & references (in-app)~~ ✅
+4. ~~Plans + IAP (free vs paid rules)~~ ✅
+5. Condition Engine v3 (traffic-light output, no aggregate score)
+6. Result screen rewrite (traffic-light layout, progressive disclosure)
+7. PDF/share rewrite (buyer-quality output)
+8. Website (single HTML page)
+9. App Store publishing (iOS + Android)
 
 ## Epics
 
-### 1) Risk Engine v2
+### 1) Risk Engine v2 ✅
 
 Epic: #16
 
@@ -28,7 +32,7 @@ Tasks:
 - [x] #25 Bump MODEL_VERSION and add stale report detection + recalc (ties to #13)
 - [x] #26 Tests: expand riskEngine coverage for v2
 
-### 2) Report UX
+### 2) Report UX ✅
 
 Epic: #17
 
@@ -40,7 +44,7 @@ Tasks:
 - [x] #30 Paid: export/share report (text share)
 - [x] #31 Paid: generate PDF from report
 
-### 3) Sources & References
+### 3) Sources & References ✅
 
 Epic: #18
 
@@ -49,7 +53,7 @@ Tasks:
 - [x] #33 UI: show Sources section in Basic report
 - [x] #34 UI: show Sources in Detailed report grouped by topic
 
-### 4) Plans + IAP
+### 4) Plans + IAP ✅
 
 Epic: #19
 
@@ -58,17 +62,74 @@ Tasks:
 - [x] #36 IAP: implement real purchase + restore (ties to #11)
 - [x] #37 Gating: enforce paid-only features
 
-### 5) Website
+### 5) Condition Engine v3
+
+Epic: #51
+
+Replaces the single aggregate score with a per-component traffic-light output.
+All 6 components always emitted. Drops `score`, `scoreBand`, `lifecycleFlags`.
+MODEL_VERSION bumps to 2.0.0.
+
+Free/paid split:
+- Free: traffic-light summary (6 rows) + viewing tips
+- Paid: decision points, cost forecast, lifetime analysis, green recommendations
+
+Tasks:
+- [ ] #55 6a: New types — ConditionLevel, ComponentCondition, ConditionOutput
+- [ ] #56 6b: Rewrite engine output, viewingTips + greenSignals builders, MODEL_VERSION 2.0.0
+- [ ] #57 6c: i18n — condition framing strings, viewing tips, green signals (both locales)
+- [ ] #58 6d: Localize triggeredBy field name labels (fix #14)
+- [ ] #59 6e: Rewrite riskEngine tests for new ConditionOutput shape
+
+### 6) Result Screen Rewrite
+
+Epic: #52
+
+Tasks:
+- [ ] #60 7a: ComponentRow UI — traffic-light summary card (replaces score card)
+- [ ] #61 7b: Viewing tips section (free)
+- [ ] #62 7c: Decision points section (paid, gated)
+- [ ] #63 7d: Cost forecast section (paid, replaces CostPill row)
+- [ ] #64 7e: Lifetime analysis section (paid, age vs lifespan table)
+- [ ] #65 7f: Green recommendations section (paid)
+- [ ] #66 7g: Report list index — replace score pill with compact traffic-light dots
+
+### 7) PDF / Share Rewrite
+
+Epic: #53
+
+Tasks:
+- [ ] #67 8a: Rewrite PDF HTML template with traffic-light structure and buyer-quality sections
+- [ ] #68 8b+8c: Update buildShareText to describe traffic-light summary
+
+### 8) Website
 
 Epic: #20
 
 Tasks:
-- [ ] #38 Website: create single index.html (inline CSS) with placeholders
-- [ ] #39 Website: populate copy and add legal disclaimers
+- [ ] #72 9e: Complete website — index.html with privacy policy (closes #38, #39)
+
+### 9) App Store Publishing
+
+Epic: #54
+
+Tasks:
+- [ ] #69 9a: Fix Android adaptive icon (transparent-bg foreground layer)
+- [ ] #70 9b+9c: Write App Store and Play Store listing copy
+- [ ] #71 9d: Screenshot specs and mockup guide
+- [ ] #73 9f: iOS build and TestFlight submission
+- [ ] #74 9g: Google Play account setup and Android submission
+
+## Rollout
+
+1. Internal TestFlight (self-test)
+2. Friends & family TestFlight (5–10 testers)
+3. Public App Store release
+4. Google Play release
 
 ## Existing Open Issues
 
-- #11 Real IAP + restore (will be covered by #36)
-- #12 Paid tier value definition (will be covered by #27/#29)
-- #13 Stale report detection (covered by #25)
-- #14 Localize triggeredBy labels (likely part of Detailed report UX)
+- #14 Localize triggeredBy labels → covered by #58
+- #47 IAP: iOS non-consumable unlock
+- #48 Google Play Developer account → covered by #74
+- #49 IAP: Android managed product
