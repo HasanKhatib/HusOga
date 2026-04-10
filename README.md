@@ -76,8 +76,12 @@ Flutter v1 source is preserved on the `flutter-archive` branch.
 - Free: traffic-light konditionsöversikt (6 rows) + viewing tips
 - Paid: decision points, cost forecast, lifetime analysis, green recommendations, PDF export
 
-**Next (Epic 9 — App Store publishing):** Android adaptive icon fix (#69), App Store + Play Store copy (#70), screenshot specs (#71), website with privacy policy (#72), iOS EAS build + TestFlight (#73), Google Play setup (#74).
+**Epic 9 — App Store publishing (in progress):**
+- ✅ #69 Android adaptive icon — transparent-background foreground layer generated
+- ✅ #70 App Store + Play Store listing copy — `docs/marketing/app-store-copy.md`
+- ✅ #71 Screenshot specs + content plan — `docs/marketing/screenshot-specs.md`
+- ✅ #72 Website `index.html` with privacy policy (ready for Cloudflare Pages deploy)
+- 🔄 #73 iOS EAS build + TestFlight submission — in progress
+- 🔄 #74 Android EAS build + Play Console submission — in progress
 
-**Android blockers (carry-over):** Play Console identity verification ongoing (#48). Android EAS build errored (build `0c9374f3`). iOS submission is unblocked.
-
-_Last updated: 2026-04-10 (refs #51, #52, #53, #14)_
+_Last updated: 2026-04-10 (refs #69, #70, #71, #72, #73, #74)_

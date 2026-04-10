@@ -107,16 +107,16 @@ Tasks:
 Epic: #20
 
 Tasks:
-- [ ] #72 9e: Complete website — index.html with privacy policy (closes #38, #39)
+- [x] #72 9e: Complete website — index.html with privacy policy (closes #38, #39)
 
 ### 9) App Store Publishing
 
 Epic: #54
 
 Tasks:
-- [ ] #69 9a: Fix Android adaptive icon (transparent-bg foreground layer)
-- [ ] #70 9b+9c: Write App Store and Play Store listing copy
-- [ ] #71 9d: Screenshot specs and mockup guide
+- [x] #69 9a: Fix Android adaptive icon (transparent-bg foreground layer)
+- [x] #70 9b+9c: Write App Store and Play Store listing copy
+- [x] #71 9d: Screenshot specs and mockup guide
 - [ ] #73 9f: iOS build and TestFlight submission
 - [ ] #74 9g: Google Play account setup and Android submission
 

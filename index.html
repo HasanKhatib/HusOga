@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="HusÖga – konditionsöversikt för husköpare. Få en snabb bild av husets skick innan du lägger bud." />
+  <title>HusÖga – Konditionsöversikt för husköpare</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:  #2e7d5e;
+      --amber:  #b45309;
+      --red:    #b91c1c;
+      --bg:     #fafaf8;
+      --surface:#ffffff;
+      --border: #e5e4e0;
+      --text:   #1c1917;
+      --muted:  #78716c;
+      --max:    720px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--green); }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 1.25rem; }
+
+    /* ── Hero ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 1.25rem 2.5rem;
+      text-align: center;
+    }
+    .logo { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; color: var(--green); }
+    .logo span { color: var(--text); }
+    .tagline { margin-top: 0.5rem; font-size: 1.15rem; color: var(--muted); }
+    .hero-desc { margin-top: 1rem; font-size: 1rem; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+    .badges { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+    .badge {
+      display: inline-block;
+      background: var(--text);
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .badge:hover { opacity: 0.82; text-decoration: none; }
+    .badge.secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    /* ── Sections ── */
+    section { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+
+    /* ── Traffic-light feature list ── */
+    .features { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .features li { display: flex; align-items: flex-start; gap: 0.6rem; }
+    .dot {
+      flex-shrink: 0;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      margin-top: 0.35rem;
+    }
+    .dot-green  { background: #22c55e; }
+    .dot-amber  { background: #f59e0b; }
+    .dot-red    { background: #ef4444; }
+    .dot-blue   { background: #3b82f6; }
+
+    /* ── Free/paid table ── */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .plan-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .plan-card.paid { border-color: var(--green); }
+    .plan-title { font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem; }
+    .plan-price { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem; }
+    .plan-price small { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+    .plan-items { list-style: none; font-size: 0.875rem; display: flex; flex-direction: column; gap: 0.35rem; }
+    .plan-items li::before { content: "✓  "; color: var(--green); font-weight: 700; }
+    .plan-items li.locked::before { content: "🔒  "; }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      background: #fff8f0;
+      border: 1px solid #fcd29a;
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+      font-size: 0.85rem;
+      color: #78350f;
+      line-height: 1.5;
+    }
+
+    /* ── Privacy ── */
+    .privacy-block { font-size: 0.9rem; }
+    .privacy-block h3 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 0.4rem; }
+    .privacy-block h3:first-child { margin-top: 0; }
+    .privacy-block p, .privacy-block ul { margin-top: 0.25rem; }
+    .privacy-block ul { padding-left: 1.25rem; }
+    .privacy-block ul li { margin-top: 0.2rem; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem 1.25rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--muted); }
+
+    @media (max-width: 480px) {
+      .plan-grid { grid-template-columns: 1fr; }
+      .logo { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ─────────────────────────────────────────── -->
+<header>
+  <div class="container">
+    <div class="logo">Hus<span>Öga</span></div>
+    <p class="tagline">Konditionsöversikt för husköpare</p>
+    <p class="hero-desc">
+      Se husets skick på ett ögonblick – tak, dränering, våtrum, VVS, uppvärmning och ventilation –
+      innan du lägger ditt bud.
+    </p>
+    <div class="badges">
+      <a class="badge" href="https://apps.apple.com/app/husoga/id0000000000" id="ios-badge">Hämta på App Store</a>
+      <a class="badge secondary" href="https://play.google.com/store/apps/details?id=com.husoga.app" id="android-badge">Hämta på Google Play</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ── What it does ───────────────────────────────── -->
+  <section>
+    <h2>Vad gör HusÖga?</h2>
+    <ul class="features">
+      <li><span class="dot dot-green"></span>Fyll i husets ålder och byggkomponenter under en visning</li>
+      <li><span class="dot dot-amber"></span>Appen jämför åldern mot teknisk livslängd för sex nyckelkomponenter</li>
+      <li><span class="dot dot-red"></span>Du får en trafiklys-konditionsöversikt direkt – ingen internetuppkoppling behövs</li>
+      <li><span class="dot dot-blue"></span>Spara, jämför och dela rapporter om flera objekt</li>
+    </ul>
+    <p style="margin-top:1rem; font-size:0.9rem; color:var(--muted);">
+      Allt lagras lokalt på din enhet. Inga konton, ingen molnsynkronisering, inga nätverkskrav.
+    </p>
+  </section>
+
+  <!-- ── Free / Paid ───────────────────────────────── -->
+  <section>
+    <h2>Gratis &amp; Betald</h2>
+    <div class="plan-grid">
+      <div class="plan-card">
+        <div class="plan-title">Gratis</div>
+        <div class="plan-price">0 kr <small>för alltid</small></div>
+        <ul class="plan-items">
+          <li>Konditionsöversikt (6 komponenter)</li>
+          <li>Trafiklysindikator per komponent</li>
+          <li>Visningstips baserade på resultaten</li>
+          <li>2 sparade rapporter</li>
+        </ul>
+      </div>
+      <div class="plan-card paid">
+        <div class="plan-title">HusÖga Pro</div>
+        <div class="plan-price">Engångsköp <small>i appen</small></div>
+        <ul class="plan-items">
+          <li>Allt i gratisversionen</li>
+          <li>Underhållspunkter &amp; åtgärdsplan</li>
+          <li>Kostnadsprognos per komponent</li>
+          <li>Livstidsanalys (ålder vs livslängd)</li>
+          <li>Gröna styrkor – vad är välskött</li>
+          <li>PDF-export &amp; delning</li>
+          <li>Obegränsat antal rapporter</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Built on research ─────────────────────────── -->
+  <section>
+    <h2>Byggt på forskning, inte gissningar</h2>
+    <p>
+      HusÖga kombinerar komponentålder, förväntad teknisk livslängd, byggnadsera, grundläggningstyp,
+      ventilationstyp och kända svenska fukt- och underhållsrisker till en snabb konditionsbild.
+    </p>
+    <p style="margin-top:0.75rem;">Modellen är informerad av:</p>
+    <ul style="padding-left:1.25rem; margin-top:0.4rem; font-size:0.9rem; display:flex; flex-direction:column; gap:0.25rem;">
+      <li>Boverkets vägledning om ventilation, fukt och inomhusmiljö</li>
+      <li>Folkhälsomyndighetens råd om fukt, mögel och inomhushälsa</li>
+      <li>Svenska livslängsreferenser från SBR och försäkringsbranschen</li>
+      <li>Nordisk forskning om byggnadsnedbrytning och fuktrisker</li>
+    </ul>
+    <p style="margin-top:0.75rem; font-size:0.85rem; color:var(--muted);">
+      HusÖga är inte ansluten till Boverket eller Folkhälsomyndigheten.
+    </p>
+  </section>
+
+  <!-- ── Legal disclaimer ──────────────────────────── -->
+  <section>
+    <div class="disclaimer">
+      <strong>Viktig information:</strong> HusÖga ersätter inte en professionell besiktning.
+      Appen är ett hjälpmedel för tidig riskbedömning och ska inte användas som underlag för
+      juridiska eller finansiella beslut utan kompletterande sakkunnig bedömning.
+      HusÖga är inte ansluten till Boverket eller Folkhälsomyndigheten.
+    </div>
+  </section>
+
+  <!-- ── Privacy Policy ────────────────────────────── -->
+  <section id="privacy">
+    <h2>Integritetspolicy</h2>
+    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">
+      Senast uppdaterad: april 2026
+    </p>
+
+    <div class="privacy-block">
+      <h3>Sammanfattning</h3>
+      <p>
+        HusÖga samlar inte in, lagrar inte och delar inte några personuppgifter.
+        Appen fungerar helt offline. All data lagras lokalt på din enhet och lämnar aldrig din enhet.
+      </p>
+
+      <h3>Vad vi samlar in</h3>
+      <p>Vi samlar inte in några uppgifter. Specifikt:</p>
+      <ul>
+        <li>Inga namn, e-postadresser eller kontaktuppgifter</li>
+        <li>Ingen platsdata</li>
+        <li>Ingen användningsstatistik eller analys</li>
+        <li>Inga identifierare för enheter</li>
+        <li>Inga kraschrapporter som skickas till externa tjänster</li>
+      </ul>
+
+      <h3>Var lagras data?</h3>
+      <p>
+        All rapportdata (husuppgifter och konditionsresultat) lagras i din enhets lokala lagring
+        (AsyncStorage). Inga data synkroniseras till molnet, externa servrar eller tredjepartstjänster.
+      </p>
+
+      <h3>Köp i appen</h3>
+      <p>
+        HusÖga Pro köps via App Store (iOS) eller Google Play (Android). Köptransaktioner hanteras
+        helt av Apple respektive Google. HusÖga mottar eller lagrar inga betalningsuppgifter.
+        Apple och Googles respektive integritetspolicyer gäller för köptransaktioner.
+      </p>
+
+      <h3>Tredjepartstjänster</h3>
+      <p>
+        HusÖga använder inga tredjepartsanalys-, annons- eller spårningsbibliotek.
+        Appen gör inga nätverksanrop under normal användning.
+      </p>
+
+      <h3>Barn</h3>
+      <p>
+        HusÖga är inte riktad till barn under 13 år. Vi samlar avsiktligt inte in uppgifter om barn.
+      </p>
+
+      <h3>Ändringar i policyn</h3>
+      <p>
+        Om integritetspolicyn ändras uppdateras datumet ovan och en ny version av appen
+        publiceras i appbutikerna.
+      </p>
+
+      <h3>Kontakt</h3>
+      <p>
+        Frågor om denna integritetspolicy kan skickas till:
+        <a href="mailto:support@husoga.app">support@husoga.app</a>
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 HusÖga &nbsp;·&nbsp; <a href="#privacy">Integritetspolicy</a></p>
+    <p style="margin-top:0.4rem;">
+      Inte ansluten till Boverket eller Folkhälsomyndigheten.
+      Ersätter inte professionell besiktning.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
