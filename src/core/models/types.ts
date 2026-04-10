@@ -38,17 +38,43 @@ export type Uppvarmning =
 
 export type Ventilation = 'ftxMekanisk' | 'fMekanisk' | 'sjalvdrag';
 
-export type FlagLevel = 'risk' | 'highRisk';
-
-export type ScoreBand = 'low' | 'medium' | 'high';
-
 export type LifecycleComponent =
   | 'roof'
   | 'facade'
-  | 'drainage'
+  | 'grund'
+  | 'vatrum'
   | 'ventilation'
-  | 'heating'
-  | 'wetRooms';
+  | 'uppvarmning';
+
+// ─── Condition levels (traffic-light) ────────────────────────────────────────
+
+export type ConditionLevel = 'ok' | 'attention' | 'priority';
+
+export interface ComponentCondition {
+  component: LifecycleComponent;
+  level: ConditionLevel;
+  messageKey: string;
+  triggeredBy: string[];
+  ageYears?: number;      // for lifetime analysis
+  lifespanYears?: number; // for lifetime analysis
+}
+
+export interface GreenSignal {
+  messageKey: string;
+}
+
+export interface CostBand {
+  min: number;
+  likely: number;
+  max: number;
+}
+
+export interface ConditionOutput {
+  componentConditions: ComponentCondition[]; // always 6, one per component
+  costBand: CostBand;
+  viewingTips: string[];    // i18n keys
+  greenSignals: GreenSignal[];
+}
 
 // ─── Data models ─────────────────────────────────────────────────────────────
 
@@ -70,33 +96,11 @@ export interface HouseInputs {
   vatrumAge?: number;
 }
 
-export interface LifecycleFlag {
-  component: LifecycleComponent;
-  level: FlagLevel;
-  triggeredBy: string[];
-  contributionPercent: number;
-  messageKey: string;
-}
-
-export interface CostBand {
-  min: number;
-  likely: number;
-  max: number;
-}
-
-export interface RiskOutput {
-  score: number;
-  scoreBand: ScoreBand;
-  lifecycleFlags: LifecycleFlag[];
-  costBand: CostBand;
-  negotiationChecklist: string[];
-}
-
 export interface Report {
   id: string;
   houseLabel: string;
   inputs: HouseInputs;
-  outputs: RiskOutput;
+  outputs: ConditionOutput;
   timestamp: string; // ISO 8601
   modelVersion: string;
 }
@@ -105,4 +109,26 @@ export interface AppSettings {
   locale: 'en' | 'sv';
   purchased: boolean;
   themeMode: 'system' | 'light' | 'dark';
+}
+
+// ─── Deprecated (kept for migration reference only) ──────────────────────────
+// @deprecated Use ConditionLevel instead
+export type FlagLevel = 'risk' | 'highRisk';
+// @deprecated Use ConditionLevel instead
+export type ScoreBand = 'low' | 'medium' | 'high';
+// @deprecated Use ConditionOutput instead
+export interface LifecycleFlag {
+  component: LifecycleComponent;
+  level: FlagLevel;
+  triggeredBy: string[];
+  contributionPercent: number;
+  messageKey: string;
+}
+// @deprecated Use ConditionOutput instead
+export interface RiskOutput {
+  score: number;
+  scoreBand: ScoreBand;
+  lifecycleFlags: LifecycleFlag[];
+  costBand: CostBand;
+  negotiationChecklist: string[];
 }

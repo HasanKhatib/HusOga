@@ -3,7 +3,7 @@ import { Alert, Platform, Pressable, ScrollView, Share, Text, View } from 'react
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { HouseInputs, LifecycleFlag, Report } from '../core/models/types';
+import type { ComponentCondition, ConditionLevel, HouseInputs, Report } from '../core/models/types';
 import { getReport } from '../core/services/storage';
 import { i18n } from '../i18n/translations';
 import { Card, PageHeader, Screen, SectionTitle } from '../ui/components';
@@ -14,6 +14,282 @@ import { SOURCES, TOPIC_ORDER, type Source, type SourceTopic } from '../core/dat
 import { useSettings } from '../context/SettingsContext';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatSEK(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} MSEK`;
+  if (amount >= 1_000) return `${Math.round(amount / 1_000)} kSEK`;
+  return `${amount} SEK`;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function levelDotColor(level: ConditionLevel): string {
+  if (level === 'priority') return '#E5484D';
+  if (level === 'attention') return '#E7A92E';
+  return '#1FA971';
+}
+
+function levelLabelText(level: ConditionLevel): string {
+  if (level === 'priority') return i18n.t('levelPriority');
+  if (level === 'attention') return i18n.t('levelAttention');
+  return i18n.t('levelOk');
+}
+
+const COMPONENT_LABEL_KEY: Record<ComponentCondition['component'], string> = {
+  roof: 'componentRoof',
+  facade: 'componentFacade',
+  grund: 'componentGrund',
+  vatrum: 'componentVatrum',
+  ventilation: 'componentVentilation',
+  uppvarmning: 'componentUppvarmning',
+};
+
+// ─── Share text ───────────────────────────────────────────────────────────────
+
+function buildShareText(report: Report): string {
+  const out = report.outputs;
+  const lines: string[] = [];
+  lines.push(`HusÖga — ${i18n.t('konditionsoverikt')}`);
+  lines.push(report.houseLabel || '');
+  lines.push(report.timestamp.slice(0, 10));
+  lines.push('');
+  for (const cc of out.componentConditions) {
+    const name = i18n.t(COMPONENT_LABEL_KEY[cc.component]);
+    const label = levelLabelText(cc.level);
+    const icon = cc.level === 'priority' ? '🔴' : cc.level === 'attention' ? '🟡' : '🟢';
+    lines.push(`${name}: ${label} ${icon}`);
+  }
+  const hasAnyCost = out.costBand.likely > 0;
+  if (hasAnyCost) {
+    lines.push('');
+    lines.push(`${i18n.t('costForecastTitle')}: ca ${formatSEK(out.costBand.likely)} (${formatSEK(out.costBand.min)}–${formatSEK(out.costBand.max)})`);
+  }
+  lines.push('');
+  lines.push(i18n.t('disclaimer'));
+  return lines.join('\n');
+}
+
+// ─── PDF HTML ─────────────────────────────────────────────────────────────────
+
+function buildPdfHtml(report: Report): string {
+  const out = report.outputs;
+  const title = escapeHtml(report.houseLabel || 'HusÖga');
+  const date = report.timestamp.slice(0, 10);
+  const disclaimer = escapeHtml(i18n.t('disclaimer'));
+  const hasAnyCost = out.costBand.likely > 0;
+
+  const conditionRows = out.componentConditions.map((cc) => {
+    const name = escapeHtml(i18n.t(COMPONENT_LABEL_KEY[cc.component]));
+    const label = escapeHtml(levelLabelText(cc.level));
+    const color = levelDotColor(cc.level);
+    return `<tr>
+      <td style="padding:10px 8px;border-bottom:1px solid #E6E8EF;">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;vertical-align:middle;"></span>
+        <strong>${name}</strong>
+      </td>
+      <td style="padding:10px 8px;border-bottom:1px solid #E6E8EF;color:${color};font-weight:700;">${label}</td>
+    </tr>`;
+  }).join('');
+
+  const tipRows = out.viewingTips.map((k) =>
+    `<li style="margin-bottom:6px;">${escapeHtml(i18n.t(k))}</li>`
+  ).join('');
+
+  const costSection = hasAnyCost
+    ? `<div class="card">
+        <h3>${escapeHtml(i18n.t('costForecastTitle'))}</h3>
+        <p>${escapeHtml(i18n.t('costForecastProse'))} <strong>${escapeHtml(formatSEK(out.costBand.min))} – ${escapeHtml(formatSEK(out.costBand.max))}</strong>, ${escapeHtml(i18n.t('likelyCost').toLowerCase())} <strong>${escapeHtml(formatSEK(out.costBand.likely))}</strong>.</p>
+      </div>`
+    : `<div class="card"><p style="color:#1FA971;font-weight:700;">${escapeHtml(i18n.t('costForecastNone'))}</p></div>`;
+
+  const lifetimeRows = out.componentConditions
+    .filter((cc) => cc.ageYears != null && cc.lifespanYears != null)
+    .map((cc) => {
+      const pct = Math.round((cc.ageYears! / cc.lifespanYears!) * 100);
+      const color = levelDotColor(cc.level);
+      return `<tr>
+        <td style="padding:8px;border-bottom:1px solid #E6E8EF;">${escapeHtml(i18n.t(COMPONENT_LABEL_KEY[cc.component]))}</td>
+        <td style="padding:8px;border-bottom:1px solid #E6E8EF;">${cc.ageYears} / ${cc.lifespanYears}</td>
+        <td style="padding:8px;border-bottom:1px solid #E6E8EF;color:${color};font-weight:700;">${pct}%</td>
+      </tr>`;
+    }).join('');
+
+  const greenRows = out.greenSignals.map((s) =>
+    `<li style="margin-bottom:6px;color:#1FA971;">✓ ${escapeHtml(i18n.t(s.messageKey))}</li>`
+  ).join('');
+
+  return `<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif; padding: 24px 28px; color: #0B1220; max-width: 680px; margin: 0 auto; }
+      h1 { font-size: 26px; margin: 0 0 4px; }
+      h2 { font-size: 18px; margin: 0 0 12px; color: #0B1220; }
+      h3 { font-size: 15px; margin: 0 0 10px; }
+      .muted { color: #5B677A; font-size: 14px; }
+      .card { border: 1px solid #E6E8EF; border-radius: 14px; padding: 16px 20px; margin: 16px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      ul { margin: 0; padding-left: 18px; }
+      .disclaimer { font-size: 11px; color: #5B677A; border-top: 1px solid #E6E8EF; margin-top: 32px; padding-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>${title}</h1>
+    <p class="muted">HusÖga · ${escapeHtml(date)}</p>
+
+    <div class="card">
+      <h2>${escapeHtml(i18n.t('konditionsoverikt'))}</h2>
+      <table>${conditionRows}</table>
+    </div>
+
+    <div class="card">
+      <h2>${escapeHtml(i18n.t('viewingTipsTitle'))}</h2>
+      <ul>${tipRows}</ul>
+    </div>
+
+    ${costSection}
+
+    ${lifetimeRows ? `<div class="card">
+      <h2>${escapeHtml(i18n.t('lifetimeAnalysisTitle'))}</h2>
+      <table>
+        <thead><tr>
+          <th style="text-align:left;padding:8px;border-bottom:2px solid #E6E8EF;">${escapeHtml(i18n.t('lifetimeComponent'))}</th>
+          <th style="text-align:left;padding:8px;border-bottom:2px solid #E6E8EF;">${escapeHtml(i18n.t('lifetimeAge'))} / ${escapeHtml(i18n.t('lifetimeLifespan'))}</th>
+          <th style="text-align:left;padding:8px;border-bottom:2px solid #E6E8EF;">${escapeHtml(i18n.t('lifetimeUsed'))}</th>
+        </tr></thead>
+        <tbody>${lifetimeRows}</tbody>
+      </table>
+    </div>` : ''}
+
+    ${greenRows ? `<div class="card">
+      <h2>${escapeHtml(i18n.t('greenStrengthsTitle'))}</h2>
+      <ul>${greenRows}</ul>
+    </div>` : ''}
+
+    <div class="disclaimer">${disclaimer}</div>
+  </body>
+</html>`;
+}
+
+// ─── Sources ──────────────────────────────────────────────────────────────────
+
+function topicLabel(topic: SourceTopic): string {
+  if (topic === 'lifespans') return i18n.t('topicLifespans');
+  if (topic === 'ventilation_moisture') return i18n.t('topicVentilationMoisture');
+  if (topic === 'maintenance_cost') return i18n.t('topicMaintenanceCost');
+  return i18n.t('topicSwedishGuidance');
+}
+
+function SourcesInline({ onOpen }: { onOpen: (s: Source) => void }) {
+  const t = useTheme();
+  const grouped = useMemo(() => {
+    const map = new Map<SourceTopic, Source[]>();
+    for (const topic of TOPIC_ORDER) map.set(topic, []);
+    for (const s of SOURCES) {
+      for (const topic of s.topics) {
+        if (!map.has(topic)) map.set(topic, []);
+        map.get(topic)!.push(s);
+      }
+    }
+    return map;
+  }, []);
+
+  return (
+    <>
+      <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22, marginBottom: 12 }}>
+        {i18n.t('sourcesIntro')}
+      </Text>
+      {TOPIC_ORDER.map((topic) => {
+        const items = grouped.get(topic) ?? [];
+        if (items.length === 0) return null;
+        return (
+          <View key={topic} style={{ marginBottom: 14 }}>
+            <Text style={{ color: t.colors.text2, fontWeight: '900', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>
+              {topicLabel(topic)}
+            </Text>
+            {items.map((s, idx) => (
+              <View key={s.id}>
+                <Pressable onPress={() => onOpen(s)} style={({ pressed }) => ({ paddingVertical: 10, opacity: pressed ? 0.85 : 1 })}>
+                  <Text style={{ color: t.colors.text, fontWeight: '900' }}>{s.title}</Text>
+                  <Text style={{ color: t.colors.text2, fontWeight: '700', marginTop: 2 }}>{s.publisher}</Text>
+                </Pressable>
+                {idx < items.length - 1 ? <View style={{ height: 1, backgroundColor: t.colors.border }} /> : null}
+              </View>
+            ))}
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
+// ─── Assumptions table ────────────────────────────────────────────────────────
+
+function AssumptionsTable({ inputs }: { inputs: HouseInputs }) {
+  const t = useTheme();
+  const rows: { label: string; value: string }[] = [
+    { label: i18n.t('roofType'), value: `${i18n.t(inputs.yttertakType)} → ${roofLifespans[inputs.yttertakType] ?? roofLifespans.other}y` },
+    {
+      label: i18n.t('facadeType'),
+      value: fasadLifespans[inputs.fasadType] == null
+        ? `${i18n.t(inputs.fasadType)} → n/a`
+        : `${i18n.t(inputs.fasadType)} → ${fasadLifespans[inputs.fasadType]}y`,
+    },
+    { label: i18n.t('drainageAge'), value: `${drainageLifespan}y (default)` },
+    { label: i18n.t('wetRoomsAge'), value: `${vatrumLifespan}y (default)` },
+  ];
+  return (
+    <View style={{ borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: t.colors.border }}>
+      {rows.map((r, idx) => (
+        <View key={r.label}>
+          <View style={{ paddingVertical: 14, paddingHorizontal: 14, backgroundColor: t.colors.surface2 }}>
+            <Text style={{ color: t.colors.text2, fontWeight: '800', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' }}>{r.label}</Text>
+            <Text style={{ color: t.colors.text, fontWeight: '800', marginTop: 4 }}>{r.value}</Text>
+          </View>
+          {idx < rows.length - 1 ? <View style={{ height: 1, backgroundColor: t.colors.border }} /> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ─── CostCell ─────────────────────────────────────────────────────────────────
+
+function CostCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  const t = useTheme();
+  const highlightBg = t.isDark ? '#141F31' : t.colors.brand;
+  const highlightBorder = t.isDark ? t.colors.info : t.colors.brand;
+  const highlightLabel = t.isDark ? '#BFD3FF' : '#C7D0E0';
+  const highlightValue = t.isDark ? '#E8EEF8' : '#fff';
+  return (
+    <View style={{
+      flex: 1, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 10, alignItems: 'center',
+      backgroundColor: highlight ? highlightBg : (t.isDark ? '#0B1220' : '#F1F3F8'),
+      borderWidth: highlight ? 1.5 : 1,
+      borderColor: highlight ? highlightBorder : t.colors.border,
+    }}>
+      <Text style={{ fontSize: 11, fontWeight: '800', color: highlight ? highlightLabel : t.colors.text2, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+        {label}
+      </Text>
+      <Text style={{ fontSize: 16, fontWeight: '900', marginTop: 4, color: highlight ? highlightValue : t.colors.text }}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function DetailedReportScreen() {
   const t = useTheme();
@@ -34,475 +310,180 @@ export default function DetailedReportScreen() {
     }
   }, [entitled, reportId, router]);
 
-  const topFlags = useMemo(() => {
-    if (!report) return [] as LifecycleFlag[];
-    return [...report.outputs.lifecycleFlags]
-      .sort((a, b) => b.contributionPercent - a.contributionPercent)
-      .slice(0, 3);
-  }, [report]);
+  if (!report) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: t.colors.text2, fontWeight: '700' }}>…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const out = report.outputs;
+  const hasAnyCost = out.costBand.likely > 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }} edges={['top', 'bottom']}>
       <ScrollView>
         <Screen>
-          <PageHeader title={i18n.t('detailedReportTitle')} subtitle={report?.houseLabel || undefined} />
+          <PageHeader title={i18n.t('detailedReportTitle')} subtitle={report.houseLabel || undefined} />
 
-          {!report ? (
-            <Card>
-              <Text style={{ color: t.colors.text2, fontWeight: '700' }}>…</Text>
-            </Card>
-          ) : (
-            <>
-              <Card>
-                <SectionTitle>{i18n.t('result')}</SectionTitle>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
-                  <Text style={{ color: t.colors.text, fontWeight: '900', fontSize: 44 }}>
-                    {report.outputs.score}
+          {/* Export buttons */}
+          <Card>
+            <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+              <Pressable
+                onPress={async () => {
+                  if (Platform.OS === 'web') { Alert.alert('', i18n.t('exportNotAvailableOnWeb')); return; }
+                  const text = buildShareText(report);
+                  await Share.share({ title: i18n.t('shareTitle'), message: text });
+                }}
+                style={({ pressed }) => ({
+                  paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12,
+                  borderWidth: 1, borderColor: t.colors.border, backgroundColor: t.colors.surface2,
+                  opacity: pressed ? 0.9 : 1,
+                })}
+              >
+                <Text style={{ color: t.colors.text, fontWeight: '900' }}>{i18n.t('exportShare')}</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={async () => {
+                  if (Platform.OS === 'web') { Alert.alert('', i18n.t('exportNotAvailableOnWeb')); return; }
+                  const html = buildPdfHtml(report);
+                  const { uri } = await Print.printToFileAsync({ html, base64: false });
+                  if (!(await Sharing.isAvailableAsync())) { Alert.alert('', i18n.t('exportedPdf')); return; }
+                  await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
+                }}
+                style={({ pressed }) => ({
+                  paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12,
+                  borderWidth: 1, borderColor: t.colors.border, backgroundColor: t.colors.surface2,
+                  opacity: pressed ? 0.9 : 1,
+                })}
+              >
+                <Text style={{ color: t.colors.text, fontWeight: '900' }}>{i18n.t('exportPdf')}</Text>
+              </Pressable>
+            </View>
+          </Card>
+
+          <View style={{ height: t.space.xl }} />
+
+          {/* Konditionsöversikt */}
+          <Card>
+            <SectionTitle>{i18n.t('konditionsoverikt')}</SectionTitle>
+            {out.componentConditions.map((cc) => {
+              const dotColor = levelDotColor(cc.level);
+              return (
+                <View key={cc.component} style={{
+                  flexDirection: 'row', alignItems: 'center', paddingVertical: 12,
+                  borderBottomWidth: 1, borderBottomColor: t.colors.border, gap: 12,
+                }}>
+                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: dotColor }} />
+                  <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: t.colors.text }}>
+                    {i18n.t(COMPONENT_LABEL_KEY[cc.component])}
                   </Text>
-                  <Text style={{ color: t.colors.text2, fontWeight: '800', fontSize: 16 }}>
-                    {i18n.t(report.outputs.scoreBand)}
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: dotColor }}>
+                    {levelLabelText(cc.level)}
                   </Text>
                 </View>
-                <View style={{ height: t.space.m }} />
+              );
+            })}
+          </Card>
 
-                <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
-                  <Pressable
-                    onPress={async () => {
-                      if (!entitled) {
-                        router.push({ pathname: '/paywall', params: { reportId } });
-                        return;
-                      }
-                      if (Platform.OS === 'web') {
-                        Alert.alert('', i18n.t('exportNotAvailableOnWeb'));
-                        return;
-                      }
-                      const text = buildShareText(report);
-                      await Share.share({ title: i18n.t('shareTitle'), message: text });
-                    }}
-                    style={({ pressed }) => ({
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: t.colors.border,
-                      backgroundColor: t.colors.surface2,
-                      opacity: pressed ? 0.9 : 1,
-                    })}
-                  >
-                    <Text style={{ color: t.colors.text, fontWeight: '900' }}>{i18n.t('exportShare')}</Text>
-                  </Pressable>
+          <View style={{ height: t.space.xl }} />
 
-                  <Pressable
-                    onPress={async () => {
-                      if (!entitled) {
-                        router.push({ pathname: '/paywall', params: { reportId } });
-                        return;
-                      }
-                      if (Platform.OS === 'web') {
-                        Alert.alert('', i18n.t('exportNotAvailableOnWeb'));
-                        return;
-                      }
-
-                      const html = buildPdfHtml(report);
-                      const { uri } = await Print.printToFileAsync({ html, base64: false });
-                      if (!(await Sharing.isAvailableAsync())) {
-                        Alert.alert('', i18n.t('exportedPdf'));
-                        return;
-                      }
-                      await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
-                    }}
-                    style={({ pressed }) => ({
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: t.colors.border,
-                      backgroundColor: t.colors.surface2,
-                      opacity: pressed ? 0.9 : 1,
-                    })}
-                  >
-                    <Text style={{ color: t.colors.text, fontWeight: '900' }}>{i18n.t('exportPdf')}</Text>
-                  </Pressable>
-                </View>
-
-                {topFlags.length === 0 ? (
-                  <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22 }}>
-                    {i18n.t('noMajorRisks')}
-                  </Text>
-                ) : (
-                  <>
-                    <Text style={{ color: t.colors.text2, fontWeight: '700', marginBottom: 8 }}>
-                      {i18n.t('topDrivers')}
-                    </Text>
-                    {topFlags.map((f, idx) => (
-                      <View key={idx} style={{ marginBottom: 10 }}>
-                        <Text style={{ color: t.colors.text, fontWeight: '800' }}>{i18n.t(f.messageKey)}</Text>
-                        <Text style={{ color: t.colors.text2, fontWeight: '600' }}>{f.contributionPercent}%</Text>
-                      </View>
-                    ))}
-                  </>
-                )}
-              </Card>
-
-              <View style={{ height: t.space.xl }} />
-
-              <Card>
-                <SectionTitle>{i18n.t('componentBreakdown')}</SectionTitle>
-                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="roof" />
-                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="facade" />
-                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="drainage" />
-                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="wetRooms" />
-                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="ventilation" />
-                <ComponentCard inputs={report.inputs} flags={report.outputs.lifecycleFlags} component="heating" />
-              </Card>
-
-              <View style={{ height: t.space.xl }} />
-
-              <Card>
-                <SectionTitle>{i18n.t('assumptionsUsed')}</SectionTitle>
-                <AssumptionsTable inputs={report.inputs} />
-              </Card>
-
-              <View style={{ height: t.space.xl }} />
-
-              <Card>
-                <SectionTitle>{i18n.t('costEstimate')}</SectionTitle>
+          {/* Cost forecast */}
+          <Card>
+            <SectionTitle>{i18n.t('costForecastTitle')}</SectionTitle>
+            {hasAnyCost ? (
+              <>
+                <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22, marginBottom: t.space.m }}>
+                  {i18n.t('costForecastProse')} {formatSEK(out.costBand.min)} – {formatSEK(out.costBand.max)}, {i18n.t('likelyCost').toLowerCase()} {formatSEK(out.costBand.likely)}.
+                </Text>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <CostCell label={i18n.t('minCost')} value={formatSEK(report.outputs.costBand.min)} />
-                  <CostCell label={i18n.t('likelyCost')} value={formatSEK(report.outputs.costBand.likely)} highlight />
-                  <CostCell label={i18n.t('maxCost')} value={formatSEK(report.outputs.costBand.max)} />
+                  <CostCell label={i18n.t('minCost')} value={formatSEK(out.costBand.min)} />
+                  <CostCell label={i18n.t('likelyCost')} value={formatSEK(out.costBand.likely)} highlight />
+                  <CostCell label={i18n.t('maxCost')} value={formatSEK(out.costBand.max)} />
                 </View>
-              </Card>
+              </>
+            ) : (
+              <Text style={{ color: t.colors.ok, fontWeight: '600', lineHeight: 22 }}>
+                {i18n.t('costForecastNone')}
+              </Text>
+            )}
+          </Card>
 
+          <View style={{ height: t.space.xl }} />
+
+          {/* Lifetime analysis */}
+          <Card>
+            <SectionTitle>{i18n.t('lifetimeAnalysisTitle')}</SectionTitle>
+            {out.componentConditions.map((cc) => {
+              if (cc.ageYears == null || cc.lifespanYears == null) return null;
+              const pct = Math.round((cc.ageYears / cc.lifespanYears) * 100);
+              const dotColor = levelDotColor(cc.level);
+              return (
+                <View key={cc.component} style={{
+                  flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
+                  borderBottomWidth: 1, borderBottomColor: t.colors.border, gap: 8,
+                }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: dotColor }} />
+                  <Text style={{ flex: 2, fontSize: 14, fontWeight: '700', color: t.colors.text }}>
+                    {i18n.t(COMPONENT_LABEL_KEY[cc.component])}
+                  </Text>
+                  <Text style={{ flex: 1, fontSize: 13, color: t.colors.text2, textAlign: 'right' }}>
+                    {cc.ageYears} / {cc.lifespanYears} {i18n.t('lifetimeAge').toLowerCase()}
+                  </Text>
+                  <Text style={{ width: 44, fontSize: 13, fontWeight: '800', color: dotColor, textAlign: 'right' }}>
+                    {pct}%
+                  </Text>
+                </View>
+              );
+            })}
+          </Card>
+
+          {/* Green strengths */}
+          {out.greenSignals.length > 0 ? (
+            <>
               <View style={{ height: t.space.xl }} />
-
               <Card>
-                <SectionTitle>{i18n.t('sources')}</SectionTitle>
-                <SourcesInline
-                  onOpen={(s) =>
-                    router.push({
-                      pathname: '/webview',
-                      params: { title: encodeURIComponent(s.title), url: encodeURIComponent(s.url) },
-                    })
-                  }
-                />
+                <SectionTitle>{i18n.t('greenStrengthsTitle')}</SectionTitle>
+                {out.greenSignals.map((s, i) => (
+                  <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
+                    <Text style={{ color: t.colors.ok, fontWeight: '900', fontSize: 16, marginTop: 1 }}>✓</Text>
+                    <Text style={{ flex: 1, color: t.colors.text, fontWeight: '600', fontSize: 14, lineHeight: 21 }}>
+                      {i18n.t(s.messageKey)}
+                    </Text>
+                  </View>
+                ))}
               </Card>
             </>
-          )}
+          ) : null}
+
+          <View style={{ height: t.space.xl }} />
+
+          {/* Assumptions */}
+          <Card>
+            <SectionTitle>{i18n.t('assumptionsUsed')}</SectionTitle>
+            <AssumptionsTable inputs={report.inputs} />
+          </Card>
+
+          <View style={{ height: t.space.xl }} />
+
+          {/* Sources */}
+          <Card>
+            <SectionTitle>{i18n.t('sources')}</SectionTitle>
+            <SourcesInline
+              onOpen={(s) =>
+                router.push({
+                  pathname: '/webview',
+                  params: { title: encodeURIComponent(s.title), url: encodeURIComponent(s.url) },
+                })
+              }
+            />
+          </Card>
         </Screen>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function buildShareText(report: Report): string {
-  const out = report.outputs;
-  const lines: string[] = [];
-  lines.push(`HusÖga - ${report.houseLabel || 'Report'}`);
-  lines.push(`Score: ${out.score}/100 (${out.scoreBand})`);
-  lines.push(`Cost (5-10y): min ${formatSEK(out.costBand.min)}, likely ${formatSEK(out.costBand.likely)}, max ${formatSEK(out.costBand.max)}`);
-  if (out.lifecycleFlags.length > 0) {
-    lines.push('');
-    lines.push('Top findings:');
-    for (const f of [...out.lifecycleFlags].sort((a, b) => b.contributionPercent - a.contributionPercent).slice(0, 5)) {
-      lines.push(`- ${f.component}: ${f.level} (${f.contributionPercent}%)`);
-    }
-  }
-  lines.push('');
-  lines.push(i18n.t('disclaimer'));
-  return lines.join('\n');
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function buildPdfHtml(report: Report): string {
-  const out = report.outputs;
-  const title = escapeHtml(report.houseLabel || 'HusÖga report');
-  const flags = [...out.lifecycleFlags]
-    .sort((a, b) => b.contributionPercent - a.contributionPercent)
-    .map((f) => `<li><strong>${escapeHtml(f.component)}</strong>: ${escapeHtml(f.level)} (${f.contributionPercent}%)</li>`)
-    .join('');
-
-  return `<!doctype html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; color: #0B1220; }
-        h1 { font-size: 24px; margin: 0 0 8px; }
-        .muted { color: #5B677A; }
-        .card { border: 1px solid #E6E8EF; border-radius: 14px; padding: 16px; margin: 16px 0; }
-        .row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .pill { border: 1px solid #E6E8EF; border-radius: 999px; padding: 8px 12px; font-weight: 700; }
-        ul { margin: 8px 0 0 18px; }
-        .disclaimer { font-size: 12px; color: #5B677A; margin-top: 24px; }
-      </style>
-    </head>
-    <body>
-      <h1>${title}</h1>
-      <div class="muted">HusÖga detailed report</div>
-      <div class="card">
-        <div class="row">
-          <div class="pill">Score: ${out.score}/100 (${escapeHtml(out.scoreBand)})</div>
-          <div class="pill">Cost (5-10y): ${formatSEK(out.costBand.likely)}</div>
-        </div>
-        <div style="margin-top: 12px" class="muted">Cost band: min ${formatSEK(out.costBand.min)}, likely ${formatSEK(out.costBand.likely)}, max ${formatSEK(out.costBand.max)}</div>
-      </div>
-      <div class="card">
-        <strong>Findings</strong>
-        <ul>${flags || '<li>No major risks flagged.</li>'}</ul>
-      </div>
-      <div class="disclaimer">${escapeHtml(i18n.t('disclaimer'))}</div>
-    </body>
-  </html>`;
-}
-
-function topicLabel(topic: SourceTopic): string {
-  if (topic === 'lifespans') return i18n.t('topicLifespans');
-  if (topic === 'ventilation_moisture') return i18n.t('topicVentilationMoisture');
-  if (topic === 'maintenance_cost') return i18n.t('topicMaintenanceCost');
-  return i18n.t('topicSwedishGuidance');
-}
-
-function SourcesInline({ onOpen }: { onOpen: (s: Source) => void }) {
-  const t = useTheme();
-
-  const grouped = useMemo(() => {
-    const map = new Map<SourceTopic, Source[]>();
-    for (const topic of TOPIC_ORDER) map.set(topic, []);
-    for (const s of SOURCES) {
-      for (const topic of s.topics) {
-        if (!map.has(topic)) map.set(topic, []);
-        map.get(topic)!.push(s);
-      }
-    }
-    return map;
-  }, []);
-
-  return (
-    <>
-      <Text style={{ color: t.colors.text2, fontWeight: '600', lineHeight: 22, marginBottom: 12 }}>
-        {i18n.t('sourcesIntro')}
-      </Text>
-
-      {TOPIC_ORDER.map((topic) => {
-        const items = grouped.get(topic) ?? [];
-        if (items.length === 0) return null;
-        return (
-          <View key={topic} style={{ marginBottom: 14 }}>
-            <Text style={{ color: t.colors.text2, fontWeight: '900', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 }}>
-              {topicLabel(topic)}
-            </Text>
-            {items.map((s, idx) => (
-              <View key={s.id}>
-                <Pressable
-                  onPress={() => onOpen(s)}
-                  style={({ pressed }) => ({
-                    paddingVertical: 10,
-                    opacity: pressed ? 0.85 : 1,
-                  })}
-                >
-                  <Text style={{ color: t.colors.text, fontWeight: '900' }}>{s.title}</Text>
-                  <Text style={{ color: t.colors.text2, fontWeight: '700', marginTop: 2 }}>{s.publisher}</Text>
-                </Pressable>
-                {idx < items.length - 1 ? <View style={{ height: 1, backgroundColor: t.colors.border }} /> : null}
-              </View>
-            ))}
-          </View>
-        );
-      })}
-    </>
-  );
-}
-
-function formatSEK(amount: number): string {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} MSEK`;
-  if (amount >= 1_000) return `${Math.round(amount / 1_000)} kSEK`;
-  return `${amount} SEK`;
-}
-
-function CostCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  const t = useTheme();
-  const highlightBg = t.isDark ? '#141F31' : t.colors.brand;
-  const highlightBorder = t.isDark ? t.colors.info : t.colors.brand;
-  const highlightLabel = t.isDark ? '#BFD3FF' : '#C7D0E0';
-  const highlightValue = t.isDark ? '#E8EEF8' : '#fff';
-  return (
-    <View
-      style={{
-        flex: 1,
-        borderRadius: 14,
-        paddingVertical: 14,
-        paddingHorizontal: 10,
-        alignItems: 'center',
-        backgroundColor: highlight ? highlightBg : (t.isDark ? '#0B1220' : '#F1F3F8'),
-        borderWidth: highlight ? 1.5 : 1,
-        borderColor: highlight ? highlightBorder : t.colors.border,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 11,
-          fontWeight: '800',
-          color: highlight ? highlightLabel : t.colors.text2,
-          letterSpacing: 0.6,
-          textTransform: 'uppercase',
-        }}
-      >
-        {label}
-      </Text>
-      <Text style={{ fontSize: 16, fontWeight: '900', marginTop: 4, color: highlight ? highlightValue : t.colors.text }}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function ComponentCard({
-  inputs,
-  flags,
-  component,
-}: {
-  inputs: HouseInputs;
-  flags: LifecycleFlag[];
-  component: LifecycleFlag['component'];
-}) {
-  const t = useTheme();
-  const flag = flags.find((f) => f.component === component);
-  const title =
-    component === 'roof'
-      ? `${i18n.t('roofType')}: ${i18n.t(inputs.yttertakType)}`
-      : component === 'facade'
-        ? `${i18n.t('facadeType')}: ${i18n.t(inputs.fasadType)}`
-        : component === 'drainage'
-          ? i18n.t('drainageAge')
-          : component === 'wetRooms'
-            ? i18n.t('wetRoomsAge')
-            : component === 'ventilation'
-              ? `${i18n.t('ventilation')}: ${i18n.t(inputs.ventilation)}`
-              : `${i18n.t('heating')}: ${i18n.t(inputs.uppvarmning)}`;
-
-  const level = flag?.level;
-  const badgeColor = level === 'highRisk' ? t.colors.danger : level === 'risk' ? t.colors.warn : t.colors.ok;
-  const badgeText = level ? i18n.t(level === 'highRisk' ? 'high' : 'medium') : i18n.t('low');
-
-  const lifespanText = componentLifespanText(inputs, component);
-  const costText = componentCostText(inputs, component);
-
-  return (
-    <View
-      style={{
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: t.colors.border,
-        backgroundColor: t.colors.surface2,
-        padding: t.space.l,
-        marginBottom: 12,
-      }}
-    >
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
-        <Text style={{ flex: 1, color: t.colors.text, fontWeight: '900', fontSize: 16 }}>{title}</Text>
-        <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: badgeColor }}>
-          <Text style={{ color: '#fff', fontWeight: '900', fontSize: 12 }}>{badgeText}</Text>
-        </View>
-      </View>
-
-      {flag ? (
-        <>
-          <View style={{ height: 8 }} />
-          <Text style={{ color: t.colors.text2, fontWeight: '700' }}>{i18n.t(flag.messageKey)}</Text>
-        </>
-      ) : null}
-
-      {lifespanText ? (
-        <>
-          <View style={{ height: 8 }} />
-          <Text style={{ color: t.colors.text2, fontWeight: '600' }}>{lifespanText}</Text>
-        </>
-      ) : null}
-
-      {costText ? (
-        <>
-          <View style={{ height: 6 }} />
-          <Text style={{ color: t.colors.text2, fontWeight: '600' }}>{costText}</Text>
-        </>
-      ) : null}
-    </View>
-  );
-}
-
-function componentLifespanText(inputs: HouseInputs, component: LifecycleFlag['component']): string | null {
-  if (component === 'roof') {
-    const l = roofLifespans[inputs.yttertakType] ?? roofLifespans.other;
-    return `Lifespan: ${l}y (age ${inputs.yttertakAge}y)`;
-  }
-  if (component === 'facade') {
-    const l = fasadLifespans[inputs.fasadType];
-    if (l == null) return `Lifespan: n/a (brick facade)`;
-    return `Lifespan: ${l}y (age ${inputs.fasadAge}y)`;
-  }
-  if (component === 'drainage') {
-    if (inputs.draneringAge == null) return 'Age: not provided';
-    return `Lifespan: ${drainageLifespan}y (age ${inputs.draneringAge}y)`;
-  }
-  if (component === 'wetRooms') {
-    if (inputs.vatrumAge == null) return 'Age: not provided';
-    return `Lifespan: ${vatrumLifespan}y (age ${inputs.vatrumAge}y)`;
-  }
-  return null;
-}
-
-function componentCostText(inputs: HouseInputs, component: LifecycleFlag['component']): string | null {
-  const fmt = (r: [number, number]) => `${formatSEK(r[0])}–${formatSEK(r[1])}`;
-  if (component === 'roof') return `Replacement: ${fmt(roofCosts[inputs.yttertakType] ?? roofCosts.other)}`;
-  if (component === 'drainage') return `Replacement: ${fmt(drainageCost)}`;
-  if (component === 'wetRooms') return `Replacement: ${fmt(vatrumCost)}`;
-  if (component === 'facade') {
-    const cp = fasadCostPerSqm[inputs.fasadType] ?? 1500;
-    if (cp <= 0) return null;
-    const cost = Math.round(inputs.size * cp);
-    return `Typical: ${formatSEK(Math.round(cost * 0.8))}–${formatSEK(Math.round(cost * 1.2))}`;
-  }
-  return null;
-}
-
-function AssumptionsTable({ inputs }: { inputs: HouseInputs }) {
-  const t = useTheme();
-
-  const rows: { label: string; value: string }[] = [
-    { label: i18n.t('roofType'), value: `${i18n.t(inputs.yttertakType)} → ${roofLifespans[inputs.yttertakType] ?? roofLifespans.other}y` },
-    {
-      label: i18n.t('facadeType'),
-      value:
-        fasadLifespans[inputs.fasadType] == null
-          ? `${i18n.t(inputs.fasadType)} → n/a`
-          : `${i18n.t(inputs.fasadType)} → ${fasadLifespans[inputs.fasadType]}y`,
-    },
-    { label: i18n.t('drainageAge'), value: `${drainageLifespan}y (default)` },
-    { label: i18n.t('wetRoomsAge'), value: `${vatrumLifespan}y (default)` },
-  ];
-
-  return (
-    <View style={{ borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: t.colors.border }}>
-      {rows.map((r, idx) => (
-        <View key={r.label}>
-          <View style={{ paddingVertical: 14, paddingHorizontal: 14, backgroundColor: t.colors.surface2 }}>
-            <Text style={{ color: t.colors.text2, fontWeight: '800', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' }}>
-              {r.label}
-            </Text>
-            <Text style={{ color: t.colors.text, fontWeight: '800', marginTop: 4 }}>{r.value}</Text>
-          </View>
-          {idx < rows.length - 1 ? <View style={{ height: 1, backgroundColor: t.colors.border }} /> : null}
-        </View>
-      ))}
-    </View>
   );
 }

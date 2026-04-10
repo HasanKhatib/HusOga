@@ -123,32 +123,20 @@ Add testers and verify:
 - Purchase flow
 - Restore (query purchases)
 
-## Product IDs You Will Need
+## Product IDs
 
-When you are ready, decide whether you want one shared ID or platform-specific IDs.
+Both platforms use the same product ID:
 
-I recommend:
-- iOS: `com.husoga.unlock`
-- Android: `husoga_unlock`
-
-We will then wire these into the app config.
+- iOS: `com.husoga.pro` (configured in `src/core/services/iapConfig.ts`)
+- Android: `com.husoga.pro` (set once the Play Console managed product is created)
 
 ## App-Side Implementation Notes (Non-Consumable)
 
-What the app must support:
+What the app supports:
 - Fetch products
 - Start purchase
-- Verify purchase result (at least client-side acknowledgement for now)
-- Persist entitlement (`purchased=true`)
+- Client-side acknowledgement (`finishTransactionAsync`)
+- Persist entitlement (`purchased=true` in AsyncStorage)
 - Restore purchases
 
-What we will NOT claim:
-- We are not doing server-side receipt validation yet.
-
-## Next Step
-
-Once you have created the app entries and the IAP products, paste:
-- iOS product ID
-- Android product ID
-
-Then we will implement #36 using `expo-in-app-purchases` (and keep dev unlock as a test bypass).
+Server-side receipt validation is out of scope for v1.

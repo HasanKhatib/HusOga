@@ -16,7 +16,6 @@ const en = {
   noReportsYet: 'No reports yet',
   createFirstAssessment: 'Tap + to create your first assessment',
   createReport: 'Create report',
-  score: 'Score',
   report: 'Report',
   deleteReportTitle: 'Delete report',
   deleteToAddAnother: 'Free tier limit reached (2 reports). Delete an existing report to create a new one.',
@@ -43,7 +42,7 @@ const en = {
   drainageAge: 'Drainage age (years, optional)',
   wetRoomsAge: 'Wet rooms age (years, optional)',
   calculate: 'Calculate',
-  calculateRisk: 'Calculate Risk',
+  calculateCondition: 'Check condition',
   requiredFields: 'Required Fields',
   optionalFields: 'Optional Fields',
 
@@ -91,50 +90,107 @@ const en = {
   fMekanisk: 'Mechanical exhaust only',
   sjalvdrag: 'Natural draught',
 
-  // Score bands
-  low: 'Low risk',
-  medium: 'Medium risk',
-  high: 'High risk',
+  // Condition levels (traffic-light)
+  levelOk: 'Well maintained',
+  levelAttention: 'Needs attention',
+  levelPriority: 'Needs priority action',
 
-  // Risk flags
-  roofRisk: 'Roof approaching end of lifespan',
-  roofHighRisk: 'Roof overdue for replacement',
-  facadeRisk: 'Facade approaching end of lifespan',
-  facadeHighRisk: 'Facade overdue for refurbishment',
-  drainageRisk: 'Drainage approaching end of lifespan',
-  drainageHighRisk: 'Drainage overdue for replacement',
-  ventilationRisk: 'Natural draught ventilation – high moisture risk',
-  heatingRisk: 'Direct electric heating – high operating cost',
-  wetRoomsRisk: 'Wet rooms approaching end of lifespan',
-  wetRoomsHighRisk: 'Wet rooms overdue for renovation',
-  betongplatta70s: '1960s–80s concrete slab – elevated drainage risk',
+  // Component names (traffic-light rows)
+  componentRoof: 'Roof',
+  componentFacade: 'Facade',
+  componentGrund: 'Foundation & drainage',
+  componentVatrum: 'Wet rooms',
+  componentVentilation: 'Ventilation',
+  componentUppvarmning: 'Heating',
 
-  // Checklist items
-  askSellerRoofFacadeDrainage: 'Ask seller for invoices: roof, facade, drainage',
+  // Component condition messages — ok (green)
+  roofOk: 'Roof is in good condition',
+  facadeOk: 'Facade is in good condition',
+  grundOk: 'Foundation & drainage looks good',
+  vatrumOk: 'Wet rooms are in good condition',
+  vatrumUnknown: 'No age entered — add wet room age for better analysis',
+  ventilationOk: 'Ventilation is working well',
+  uppvarmningOk: 'Heating system is efficient',
+
+  // Component condition messages — attention (yellow)
+  roofAttention: 'Roof is approaching end of lifespan',
+  facadeAttention: 'Facade is approaching end of lifespan',
+  grundAttention: 'Drainage is approaching end of lifespan',
+  vatrumAttention: 'Wet rooms are approaching end of lifespan',
+  ventilationAttention: 'Natural draught ventilation — elevated moisture concern',
+  uppvarmningAttention: 'Direct electric heating — high operating cost',
+
+  // Component condition messages — priority (red)
+  roofPriority: 'Roof is overdue for replacement',
+  facadePriority: 'Facade is overdue for refurbishment',
+  grundPriority: 'Drainage is overdue for replacement',
+  vatrumPriority: 'Wet rooms are overdue for renovation',
+  ventilationPriority: 'Natural draught ventilation — significant moisture risk',
+  uppvarmningPriority: 'Direct electric heating — very high operating cost',
+
+  // Special condition messages
+  grundSlab70s: '1960s–80s concrete slab — drainage should be inspected',
+
+  // Viewing tips (free tier)
+  viewingTipsTitle: 'Viewing tips',
+  tipOldHouseFoundation: 'Pre-1960 house: check for foundation movement, cracks in walls and corners, and moisture in the basement or crawl space.',
+  tipSlab70s: '1965–1985 concrete slab: look for damp patches near exterior walls and ask if drainage has been replaced.',
+  tipCrawlSpace: 'Crawl space: check for moisture, mould smell, and adequate ventilation — these are common problem areas.',
+  tipNaturalDraught: 'Natural draught ventilation: check moisture in bathrooms and kitchen — inadequate ventilation accelerates damp damage.',
+  tipOldRoof: 'Roof is over 60% through its lifespan: look for missing tiles, moss, or water marks in the attic.',
+  tipOldWetRooms: 'Wet rooms over 60% through lifespan: look for loose tiles, discolouration around seals, and check under sink cabinets.',
+  tipDirectElectric: 'Direct electric heating: ask for the last 12 months of electricity bills to understand actual operating cost.',
+  tipOilHeating: 'Oil heating: check the age of the boiler, ask about the last service, and note that future regulations may affect oil-heated homes.',
+  tipCheckMoisture: 'Check for moisture and damp smell in the basement, crawl space, and around window frames.',
+  tipAskForInvoices: 'Ask the seller for invoices for any recent major work — roof, facade, drainage, or heating.',
+
+  // Decision points (paid tier)
+  decisionPointsTitle: 'Decision points',
   demandBuyerInspection: 'Commission an independent buyer\'s inspection (överlåtelsebesiktning)',
-  betongplatta70sCheck: 'Inspect drainage and radon – known issue for 1965–1985 concrete slabs',
+  askSellerInvoices: 'Ask seller for invoices: roof, facade, drainage',
+  betongplatta70sCheck: 'Inspect drainage and radon — known issue for 1965–1985 concrete slabs',
   vatrumCheck: 'Request wet room inspection protocol',
   roofSnowCheck: 'Check roof load capacity and snow guard status',
 
-  // Result screen
-  costEstimate: 'Cost estimate (5–10 years)',
-  lifecycleFlags: 'Lifecycle Flags',
-  viewDetailedReport: 'View detailed report',
+  // Cost forecast (paid tier)
+  costForecastTitle: 'Cost forecast (5–10 years)',
+  costForecastProse: 'Estimated maintenance cost over the next 5–10 years:',
+  costForecastNone: 'No major maintenance costs expected within 5–10 years.',
+  minCost: 'Min',
+  likelyCost: 'Likely',
+  maxCost: 'Max',
+
+  // Lifetime analysis (paid tier)
+  lifetimeAnalysisTitle: 'Lifetime analysis',
+  lifetimeComponent: 'Component',
+  lifetimeAge: 'Age',
+  lifetimeLifespan: 'Lifespan',
+  lifetimeUsed: 'Used',
+  lifetimeCondition: 'Condition',
+  lifetimeUnknown: '–',
+
+  // Green strengths (paid tier)
+  greenStrengthsTitle: 'Green strengths',
+  greenBergvarme: 'Ground source heat pump — low carbon, low operating cost, and high energy efficiency.',
+  greenFjärrvärme: 'District heating — grid-efficient and low emissions across most Swedish municipalities.',
+  greenLuftvarmepump: 'Air source heat pump — 3–4x energy efficiency compared to direct electric heating.',
+  greenFtx: 'Balanced mechanical ventilation (FTX) — heat recovery reduces energy loss significantly.',
+  greenTegelFasad: 'Brick facade — minimal maintenance requirement and effectively indefinite lifespan.',
+  greenDurableRoof: 'Durable roof material — long lifespan and recyclable at end of life.',
+
+  // Konditionsöversikt (result screen)
+  konditionsoverikt: 'Condition overview',
+  noMajorPoints: 'No inspection points flagged.',
+
+  // Stale model
   modelUpdatedTitle: 'Model updated',
   modelUpdatedBody: 'This report was computed with an older model version. Recalculate to update the results.',
   recalculate: 'Recalculate',
   recalculated: 'Recalculated',
-  minCost: 'Min',
-  likelyCost: 'Likely',
-  maxCost: 'Max',
-  negotiationChecklist: 'Negotiation checklist',
-  disclaimer: 'This assessment is not a replacement for a professional inspection. HusÖga is not affiliated with Boverket or Folkhälsomyndigheten.',
 
   // Detailed report / paywall
   detailedReportTitle: 'Detailed report',
-  topDrivers: 'Top drivers',
-  noMajorRisks: 'No major risks flagged.',
-  componentBreakdown: 'Component breakdown',
+  viewDetailedReport: 'View detailed report',
   assumptionsUsed: 'Assumptions used',
   sources: 'Sources',
   sourcesPlaceholder: 'Sources will be shown here (linked and grouped by topic).',
@@ -160,10 +216,22 @@ const en = {
   upgradeTitle: 'Upgrade',
   upgradeSubtitle: 'Unlock detailed reports and export',
   upgradeValueHeader: 'Includes:',
-  upgradeValueDetailed: 'Detailed component breakdown and recommendations',
+  upgradeValueDetailed: 'Decision points, cost forecast, and lifetime analysis',
   upgradeValueAssumptions: 'Assumptions and lifespans used in the model',
   upgradeValueExport: 'Share and PDF export',
   upgradeValueUnlimited: 'Unlimited saved reports',
+
+  // Localized field names (triggeredBy labels — fix #14)
+  fieldYttertakType: 'Roof type',
+  fieldYttertakAge: 'Roof age',
+  fieldFasadType: 'Facade type',
+  fieldFasadAge: 'Facade age',
+  fieldDraneringAge: 'Drainage age',
+  fieldVatrumAge: 'Wet rooms age',
+  fieldVentilation: 'Ventilation',
+  fieldUppvarmning: 'Heating',
+  fieldByggnadsar: 'Build year',
+  fieldGrunlaeggning: 'Foundation',
 
   // Settings
   language: 'Language',
@@ -191,6 +259,9 @@ const en = {
 
   // Errors
   required: 'Required',
+
+  // Legal
+  disclaimer: 'This assessment is not a replacement for a professional inspection. HusÖga is not affiliated with Boverket or Folkhälsomyndigheten.',
 };
 
 const sv: typeof en = {
@@ -206,7 +277,6 @@ const sv: typeof en = {
   noReportsYet: 'Inga rapporter än',
   createFirstAssessment: 'Tryck på + för att göra din första bedömning',
   createReport: 'Skapa rapport',
-  score: 'Poäng',
   report: 'Rapport',
   deleteReportTitle: 'Ta bort rapport',
   deleteToAddAnother: 'Gränsen för gratisversionen är nådd (2 rapporter). Ta bort en befintlig rapport för att skapa en ny.',
@@ -232,7 +302,7 @@ const sv: typeof en = {
   drainageAge: 'Dräneringens ålder (år, valfritt)',
   wetRoomsAge: 'Våtrummens ålder (år, valfritt)',
   calculate: 'Beräkna',
-  calculateRisk: 'Beräkna risk',
+  calculateCondition: 'Beräkna kondition',
   requiredFields: 'Obligatoriska fält',
   optionalFields: 'Valfria fält',
 
@@ -274,45 +344,93 @@ const sv: typeof en = {
   fMekanisk: 'Mekanisk frånluft',
   sjalvdrag: 'Självdrag',
 
-  low: 'Låg risk',
-  medium: 'Medelhög risk',
-  high: 'Hög risk',
+  levelOk: 'Välskött',
+  levelAttention: 'Kräver uppmärksamhet',
+  levelPriority: 'Kräver åtgärd',
 
-  roofRisk: 'Taket närmar sig livslängdens slut',
-  roofHighRisk: 'Taket är försenat för byte',
-  facadeRisk: 'Fasaden närmar sig livslängdens slut',
-  facadeHighRisk: 'Fasaden är försenad för renovering',
-  drainageRisk: 'Dräneringen närmar sig livslängdens slut',
-  drainageHighRisk: 'Dräneringen är försenad för byte',
-  ventilationRisk: 'Självdrag – hög fuktrisknivå',
-  heatingRisk: 'Direktverkande el – höga driftkostnader',
-  wetRoomsRisk: 'Våtrummen närmar sig livslängdens slut',
-  wetRoomsHighRisk: 'Våtrummen är försenade för renovering',
-  betongplatta70s: 'Betongplatta från 60–80-tal – förhöjd dräneringsrisk',
+  componentRoof: 'Tak',
+  componentFacade: 'Fasad',
+  componentGrund: 'Grund & dränering',
+  componentVatrum: 'Våtrum',
+  componentVentilation: 'Ventilation',
+  componentUppvarmning: 'Uppvärmning',
 
-  askSellerRoofFacadeDrainage: 'Begär kvitton: tak, fasad, dränering',
+  roofOk: 'Taket är välskött',
+  facadeOk: 'Fasaden är välskött',
+  grundOk: 'Grunden ser bra ut',
+  vatrumOk: 'Våtrummen är välskötta',
+  vatrumUnknown: 'Uppgift saknas — ange ålder för bättre analys',
+  ventilationOk: 'Ventilationen fungerar bra',
+  uppvarmningOk: 'Uppvärmningen är effektiv',
+
+  roofAttention: 'Taket närmar sig livslängdens slut',
+  facadeAttention: 'Fasaden närmar sig livslängdens slut',
+  grundAttention: 'Dräneringen närmar sig livslängdens slut',
+  vatrumAttention: 'Våtrummen närmar sig livslängdens slut',
+  ventilationAttention: 'Självdrag – förhöjd fuktproblematik',
+  uppvarmningAttention: 'Direktverkande el – höga driftkostnader',
+
+  roofPriority: 'Taket är försenat för byte',
+  facadePriority: 'Fasaden är försenad för renovering',
+  grundPriority: 'Dräneringen är försenad för byte',
+  vatrumPriority: 'Våtrummen är försenade för renovering',
+  ventilationPriority: 'Självdrag – betydande fuktrisk',
+  uppvarmningPriority: 'Direktverkande el – mycket höga driftkostnader',
+
+  grundSlab70s: 'Betongplatta från 60–80-tal – dräneringen bör kontrolleras',
+
+  viewingTipsTitle: 'Visningtips',
+  tipOldHouseFoundation: 'Hus från före 1960: kontrollera för sättningar, sprickor i väggar och hörn, samt fukt i källare eller krypgrund.',
+  tipSlab70s: 'Betongplatta 1965–1985: titta efter fuktfläckar nära ytterväggar och fråga om dräneringen har bytts.',
+  tipCrawlSpace: 'Krypgrund: kontrollera fukt, mögellukt och tillräcklig ventilation – detta är vanliga problemområden.',
+  tipNaturalDraught: 'Självdrag: kontrollera fukt i badrum och kök – otillräcklig ventilation påskyndar fuktskador.',
+  tipOldRoof: 'Taket är mer än 60% igenom sin livslängd: titta efter saknade pannor, mossa eller vattenmärken på vinden.',
+  tipOldWetRooms: 'Våtrum mer än 60% igenom livslängden: titta efter lösa kakel, missfärgning vid fogar och under diskbänksskåp.',
+  tipDirectElectric: 'Direktverkande el: be om de senaste 12 månadernas elräkningar för att förstå den faktiska driftskostnaden.',
+  tipOilHeating: 'Oljepanna: kontrollera pannas ålder, fråga om senaste service och notera att framtida regler kan påverka oljehus.',
+  tipCheckMoisture: 'Kontrollera fukt och mögeldoft i källare, krypgrund och runt fönsterkarmarna.',
+  tipAskForInvoices: 'Be säljaren om kvitton på större arbeten – tak, fasad, dränering eller uppvärmning.',
+
+  decisionPointsTitle: 'Beslutspunkter',
   demandBuyerInspection: 'Beställ en överlåtelsebesiktning',
+  askSellerInvoices: 'Begär kvitton: tak, fasad, dränering',
   betongplatta70sCheck: 'Kontrollera dränering och radon – känt problem för betongplattor 1965–1985',
   vatrumCheck: 'Begär våtrumsinspektionsprotokoll',
   roofSnowCheck: 'Kontrollera bärförmåga och snöräcken',
 
-  costEstimate: 'Kostnadsbedömning (5–10 år)',
-  lifecycleFlags: 'Livslängdsflaggor',
-  viewDetailedReport: 'Visa detaljerad rapport',
+  costForecastTitle: 'Kostnadsprognos (5–10 år)',
+  costForecastProse: 'Beräknat underhållsbehov de närmaste 5–10 åren:',
+  costForecastNone: 'Inga större underhållskostnader förväntas inom 5–10 år.',
+  minCost: 'Min',
+  likelyCost: 'Troligt',
+  maxCost: 'Max',
+
+  lifetimeAnalysisTitle: 'Livslängdsanalys',
+  lifetimeComponent: 'Komponent',
+  lifetimeAge: 'Ålder',
+  lifetimeLifespan: 'Livslängd',
+  lifetimeUsed: 'Förbrukat',
+  lifetimeCondition: 'Kondition',
+  lifetimeUnknown: '–',
+
+  greenStrengthsTitle: 'Gröna styrkor',
+  greenBergvarme: 'Bergvärme – lågt koldioxidavtryck, låga driftskostnader och hög energieffektivitet.',
+  greenFjärrvärme: 'Fjärrvärme – näteffektivt och låga utsläpp i de flesta svenska kommuner.',
+  greenLuftvarmepump: 'Luftvärmepump – 3–4 gånger mer energieffektiv än direktverkande el.',
+  greenFtx: 'Balanserad mekanisk ventilation (FTX) – värmeåtervinning minskar energiförlusten betydligt.',
+  greenTegelFasad: 'Tegelfasad – minimalt underhållsbehov och i praktiken obegränsad livslängd.',
+  greenDurableRoof: 'Beständigt taktäckningsmaterial – lång livslängd och återvinningsbart vid utbyte.',
+
+  konditionsoverikt: 'Konditionsöversikt',
+  noMajorPoints: 'Inga underhållspunkter flaggade.',
+
   modelUpdatedTitle: 'Modellen är uppdaterad',
   modelUpdatedBody: 'Den här rapporten beräknades med en äldre modellversion. Beräkna om för att uppdatera resultatet.',
   recalculate: 'Beräkna om',
   recalculated: 'Omberäknad',
-  minCost: 'Min',
-  likelyCost: 'Troligt',
-  maxCost: 'Max',
-  negotiationChecklist: 'Förhandlingschecklista',
-  disclaimer: 'Denna bedömning ersätter inte en professionell besiktning. HusÖga är inte kopplat till Boverket eller Folkhälsomyndigheten.',
 
   detailedReportTitle: 'Detaljerad rapport',
-  topDrivers: 'Största drivare',
-  noMajorRisks: 'Inga större risker flaggade.',
-  componentBreakdown: 'Komponentöversikt',
+  viewDetailedReport: 'Visa detaljerad rapport',
   assumptionsUsed: 'Antaganden',
   sources: 'Källor',
   sourcesPlaceholder: 'Källor visas här (länkade och grupperade per ämne).',
@@ -338,10 +456,21 @@ const sv: typeof en = {
   upgradeTitle: 'Uppgradera',
   upgradeSubtitle: 'Lås upp detaljerade rapporter och export',
   upgradeValueHeader: 'Ingår:',
-  upgradeValueDetailed: 'Detaljerad komponentgenomgång och rekommendationer',
+  upgradeValueDetailed: 'Beslutspunkter, kostnadsprognos och livslängdsanalys',
   upgradeValueAssumptions: 'Antaganden och livslängder som används i modellen',
   upgradeValueExport: 'Delning och PDF-export',
   upgradeValueUnlimited: 'Obegränsat antal sparade rapporter',
+
+  fieldYttertakType: 'Taktyp',
+  fieldYttertakAge: 'Takålder',
+  fieldFasadType: 'Fasadtyp',
+  fieldFasadAge: 'Fasadålder',
+  fieldDraneringAge: 'Dräneringsålder',
+  fieldVatrumAge: 'Våtrumsålder',
+  fieldVentilation: 'Ventilation',
+  fieldUppvarmning: 'Uppvärmning',
+  fieldByggnadsar: 'Byggår',
+  fieldGrunlaeggning: 'Grundläggning',
 
   language: 'Språk',
   languageSwedish: 'Svenska',
@@ -367,6 +496,8 @@ const sv: typeof en = {
   purchaseTimeout: 'Köpet tog för lång tid. Försök igen.',
 
   required: 'Obligatoriskt',
+
+  disclaimer: 'Denna bedömning ersätter inte en professionell besiktning. HusÖga är inte kopplat till Boverket eller Folkhälsomyndigheten.',
 };
 
 export const i18n = new I18n({ en, sv });

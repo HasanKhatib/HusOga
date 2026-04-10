@@ -368,7 +368,7 @@ export default function FormScreen() {
               </View>
             </View>
 
-            <PrimaryButton label={i18n.t('calculateRisk') ?? i18n.t('calculate')} onPress={handleCalculate} />
+            <PrimaryButton label={i18n.t('calculateCondition')} onPress={handleCalculate} />
           </Card>
         </Screen>
       </ScrollView>

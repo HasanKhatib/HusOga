@@ -1,18 +1,22 @@
-import type { HouseInputs, RiskOutput, LifecycleFlag, CostBand, ScoreBand } from '../models/types';
+import type {
+  HouseInputs,
+  ConditionOutput,
+  ComponentCondition,
+  ConditionLevel,
+  GreenSignal,
+  CostBand,
+} from '../models/types';
 import { roofLifespans, fasadLifespans, drainageLifespan, vatrumLifespan } from '../data/lifespans';
 import { roofCosts, fasadCostPerSqm, drainageCost, vatrumCost } from '../data/costs';
 
-export const MODEL_VERSION = '1.1.0';
-
-const RISK_THRESHOLD = 0.7;
-const HIGH_RISK_THRESHOLD = 0.9;
+export const MODEL_VERSION = '2.0.0';
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /**
- * Continuous deterioration curve (v2): ratio=age/lifespan → condition in [0..1].
- * Designed to accelerate near end-of-life while staying continuous.
+ * Continuous deterioration curve: ratio=age/lifespan → condition in [0..1].
+ * Accelerates near end-of-life while staying continuous.
  */
 export function conditionFromRatio(ratio: number): number {
   const r = ratio;
@@ -25,319 +29,338 @@ export function conditionFromRatio(ratio: number): number {
   return lerp(0.9, 1.0, Math.min((r - 1.1) / 0.4, 1.0));
 }
 
-// v2 component weights (must sum to 1.0)
-const WEIGHTS_V2 = {
-  roof: 0.2,
-  wetRooms: 0.2,
-  drainage: 0.15,
-  facade: 0.1,
-  ventilation: 0.15,
-  heating: 0.1,
-  foundationBucket: 0.1,
-} as const;
+// ─── Condition level thresholds ───────────────────────────────────────────────
 
-function foundationBucketCondition(inputs: HouseInputs): number {
-  if (inputs.grundlaeggning === 'betongplatta') {
-    if (inputs.byggnadsar >= 1965 && inputs.byggnadsar <= 1985) return 0.55;
-    return 0.3;
+function levelFromCondition(c: number, isTypeOnly = false): ConditionLevel {
+  // Type-only components (ventilation, uppvarmning) have lower thresholds
+  // because their condition is based on type, not age deterioration.
+  if (isTypeOnly) {
+    if (c >= 0.45) return 'priority';
+    if (c >= 0.2)  return 'attention';
+    return 'ok';
   }
-  if (inputs.grundlaeggning === 'krypgrund') return 0.5;
-  if (inputs.grundlaeggning === 'kallare') return 0.35;
-  if (inputs.grundlaeggning === 'suterrang') return 0.4;
-  return 0.25;
+  if (c >= 0.7) return 'priority';
+  if (c >= 0.4) return 'attention';
+  return 'ok';
 }
 
-function ventilationCondition(inputs: HouseInputs): number {
-  if (inputs.ventilation === 'sjalvdrag') return 0.55;
-  if (inputs.ventilation === 'fMekanisk') return 0.2;
-  return 0.1;
+// ─── Component condition calculators ─────────────────────────────────────────
+
+function roofCondition(inputs: HouseInputs): ComponentCondition {
+  const lifespan = roofLifespans[inputs.yttertakType] ?? roofLifespans.other;
+  const c = clamp01(conditionFromRatio(inputs.yttertakAge / lifespan));
+  const level = levelFromCondition(c);
+  const messageKey =
+    level === 'priority' ? 'roofPriority' :
+    level === 'attention' ? 'roofAttention' : 'roofOk';
+  return {
+    component: 'roof',
+    level,
+    messageKey,
+    triggeredBy: ['yttertakType', 'yttertakAge'],
+    ageYears: inputs.yttertakAge,
+    lifespanYears: lifespan,
+  };
 }
 
-function heatingCondition(inputs: HouseInputs): number {
-  if (inputs.uppvarmning === 'direktverkandeEl') return 0.45;
-  return 0.15;
-}
-
-function levelFromCondition(c: number): LifecycleFlag['level'] | null {
-  if (c >= 0.7) return 'highRisk';
-  if (c >= 0.4) return 'risk';
-  return null;
-}
-
-function messageKeyFor(component: LifecycleFlag['component'], level: LifecycleFlag['level']): string {
-  if (component === 'roof') return level === 'highRisk' ? 'roofHighRisk' : 'roofRisk';
-  if (component === 'facade') return level === 'highRisk' ? 'facadeHighRisk' : 'facadeRisk';
-  if (component === 'drainage') return level === 'highRisk' ? 'drainageHighRisk' : 'drainageRisk';
-  if (component === 'wetRooms') return level === 'highRisk' ? 'wetRoomsHighRisk' : 'wetRoomsRisk';
-  if (component === 'ventilation') return 'ventilationRisk';
-  return 'heatingRisk';
-}
-
-function scoreToBand(score: number): ScoreBand {
-  if (score < 30) return 'low';
-  if (score < 60) return 'medium';
-  return 'high';
-}
-
-function buildChecklist(flags: LifecycleFlag[]): string[] {
-  const items: string[] = ['askSellerRoofFacadeDrainage', 'demandBuyerInspection'];
-  if (flags.some((f) => f.component === 'drainage')) items.push('betongplatta70sCheck');
-  if (flags.some((f) => f.component === 'wetRooms')) items.push('vatrumCheck');
-  if (flags.some((f) => f.component === 'roof')) items.push('roofSnowCheck');
-  return items;
-}
-
-/**
- * v2 engine: continuous curve + explicit weights.
- * Keep v1 computeRisk() unchanged until we also ship MODEL_VERSION bump + stale handling.
- */
-export function computeRiskV2(inputs: HouseInputs): RiskOutput {
-  const components: {
-    key: keyof typeof WEIGHTS_V2;
-    component?: LifecycleFlag['component'];
-    condition: number;
-    triggeredBy: string[];
-  }[] = [];
-
-  const slab70s = inputs.byggnadsar >= 1965 && inputs.byggnadsar <= 1985 && inputs.grundlaeggning === 'betongplatta';
-
-  // Roof
-  const roofLifespan = roofLifespans[inputs.yttertakType] ?? roofLifespans.other;
-  const roofC = clamp01(conditionFromRatio(inputs.yttertakAge / roofLifespan));
-  components.push({ key: 'roof', component: 'roof', condition: roofC, triggeredBy: ['yttertakType', 'yttertakAge'] });
-
-  // Facade
-  const fasadLifespan = fasadLifespans[inputs.fasadType];
-  const facadeC = fasadLifespan == null ? 0 : clamp01(conditionFromRatio(inputs.fasadAge / fasadLifespan));
-  components.push({ key: 'facade', component: 'facade', condition: facadeC, triggeredBy: ['fasadType', 'fasadAge'] });
-
-  // Drainage (optional direct input)
-  let drainageC = inputs.draneringAge == null ? 0 : clamp01(conditionFromRatio(inputs.draneringAge / drainageLifespan));
-  const drainageTriggeredBy = ['draneringAge'];
-  if (slab70s && inputs.draneringAge != null) {
-    drainageC = clamp01(drainageC * 1.15);
-    drainageTriggeredBy.push('byggnadsar', 'grundlaeggning');
+function facadeCondition(inputs: HouseInputs): ComponentCondition {
+  const lifespan = fasadLifespans[inputs.fasadType];
+  // Tegel has no practical lifespan — always ok
+  if (lifespan == null) {
+    return {
+      component: 'facade',
+      level: 'ok',
+      messageKey: 'facadeOk',
+      triggeredBy: ['fasadType'],
+    };
   }
-  components.push({ key: 'drainage', component: 'drainage', condition: drainageC, triggeredBy: drainageTriggeredBy });
+  const c = clamp01(conditionFromRatio(inputs.fasadAge / lifespan));
+  const level = levelFromCondition(c);
+  const messageKey =
+    level === 'priority' ? 'facadePriority' :
+    level === 'attention' ? 'facadeAttention' : 'facadeOk';
+  return {
+    component: 'facade',
+    level,
+    messageKey,
+    triggeredBy: ['fasadType', 'fasadAge'],
+    ageYears: inputs.fasadAge,
+    lifespanYears: lifespan,
+  };
+}
 
-  // Wet rooms (optional)
-  let wetRoomsC = inputs.vatrumAge == null ? 0 : clamp01(conditionFromRatio(inputs.vatrumAge / vatrumLifespan));
-  const wetRoomsTriggeredBy = ['vatrumAge'];
-  if (slab70s && inputs.vatrumAge != null) {
-    wetRoomsC = clamp01(wetRoomsC * 1.05);
-    wetRoomsTriggeredBy.push('byggnadsar', 'grundlaeggning');
-  }
-  if (inputs.ventilation === 'sjalvdrag' && inputs.vatrumAge != null) {
-    wetRoomsC = clamp01(wetRoomsC * 1.1);
-    wetRoomsTriggeredBy.push('ventilation');
-  }
-  components.push({ key: 'wetRooms', component: 'wetRooms', condition: wetRoomsC, triggeredBy: wetRoomsTriggeredBy });
+function grundCondition(inputs: HouseInputs): ComponentCondition {
+  const slab70s =
+    inputs.byggnadsar >= 1965 &&
+    inputs.byggnadsar <= 1985 &&
+    inputs.grundlaeggning === 'betongplatta';
 
-  // Ventilation (type-based)
-  const ventC = clamp01(ventilationCondition(inputs));
-  components.push({ key: 'ventilation', component: 'ventilation', condition: ventC, triggeredBy: ['ventilation'] });
+  let c: number;
+  const triggeredBy: string[] = ['grundlaeggning'];
 
-  // Heating (type-based)
-  const heatC = clamp01(heatingCondition(inputs));
-  components.push({ key: 'heating', component: 'heating', condition: heatC, triggeredBy: ['uppvarmning'] });
-
-  // Foundation risk bucket (continuous contributor, no direct flag)
-  const foundationC = clamp01(foundationBucketCondition(inputs));
-  components.push({ key: 'foundationBucket', condition: foundationC, triggeredBy: ['byggnadsar', 'grundlaeggning'] });
-
-  const weightedSum = components.reduce((acc, c) => acc + WEIGHTS_V2[c.key] * c.condition, 0);
-  const score = Math.min(100, Math.max(0, Math.round(100 * weightedSum)));
-
-  // Flags are emitted only for explicit components (not foundationBucket)
-  const flagged = components
-    .filter((c): c is (typeof components)[number] & { component: LifecycleFlag['component'] } => !!c.component)
-    .map((c) => {
-      const level = levelFromCondition(c.condition);
-      return level
-        ? {
-            component: c.component,
-            level,
-            triggeredBy: c.triggeredBy,
-            contribution: WEIGHTS_V2[c.key] * c.condition,
-          }
-        : null;
-    })
-    .filter((x): x is NonNullable<typeof x> => x != null);
-
-  // Special rule: keep the slab-era drainage warning as a discrete flag for explainability.
-  const hasDrainageFlag = flagged.some((f) => f.component === 'drainage');
-  if (slab70s && !hasDrainageFlag) {
-    flagged.push({
-      component: 'drainage',
-      level: 'risk',
-      triggeredBy: ['byggnadsar', 'grundlaeggning'],
-      contribution: WEIGHTS_V2.foundationBucket * foundationC,
-    });
+  if (inputs.draneringAge != null) {
+    // Use drainage age as primary condition, amplified for slab70s
+    c = clamp01(conditionFromRatio(inputs.draneringAge / drainageLifespan));
+    triggeredBy.push('draneringAge');
+    if (slab70s) {
+      c = clamp01(c * 1.15);
+      triggeredBy.push('byggnadsar');
+    }
+  } else {
+    // No drainage age: base on foundation type
+    const baseConditions: Record<string, number> = {
+      betongplatta: 0.3,
+      krypgrund: 0.5,
+      kallare: 0.35,
+      suterrang: 0.4,
+      other: 0.25,
+    };
+    c = baseConditions[inputs.grundlaeggning] ?? 0.25;
+    if (slab70s) {
+      // 70s concrete slab is a known drainage risk even without age data
+      c = Math.max(c, 0.45);
+      triggeredBy.push('byggnadsar');
+    }
   }
 
-  const denom = flagged.reduce((a, b) => a + b.contribution, 0) || 1;
-  const lifecycleFlags: LifecycleFlag[] = flagged.map((f) => ({
-    component: f.component,
-    level: f.level,
-    triggeredBy: f.triggeredBy,
-    contributionPercent: Math.round((100 * f.contribution) / denom),
-    messageKey: slab70s && f.component === 'drainage' && f.triggeredBy.includes('grundlaeggning') ? 'betongplatta70s' : messageKeyFor(f.component, f.level),
-  }));
+  const level = levelFromCondition(c);
+  let messageKey: string;
+  if (slab70s && level !== 'ok') {
+    messageKey = 'grundSlab70s';
+  } else {
+    messageKey =
+      level === 'priority' ? 'grundPriority' :
+      level === 'attention' ? 'grundAttention' : 'grundOk';
+  }
 
-  // v2 keeps v1 cost behavior for now (updated later with expected-value coupling).
+  return {
+    component: 'grund',
+    level,
+    messageKey,
+    triggeredBy,
+    ageYears: inputs.draneringAge,
+    lifespanYears: inputs.draneringAge != null ? drainageLifespan : undefined,
+  };
+}
+
+function vatrumCondition(inputs: HouseInputs): ComponentCondition {
+  if (inputs.vatrumAge == null) {
+    return {
+      component: 'vatrum',
+      level: 'ok',
+      messageKey: 'vatrumUnknown',
+      triggeredBy: [],
+    };
+  }
+
+  const slab70s =
+    inputs.byggnadsar >= 1965 &&
+    inputs.byggnadsar <= 1985 &&
+    inputs.grundlaeggning === 'betongplatta';
+
+  const triggeredBy: string[] = ['vatrumAge'];
+  let c = clamp01(conditionFromRatio(inputs.vatrumAge / vatrumLifespan));
+
+  if (slab70s) {
+    c = clamp01(c * 1.05);
+    triggeredBy.push('byggnadsar', 'grundlaeggning');
+  }
+  if (inputs.ventilation === 'sjalvdrag') {
+    c = clamp01(c * 1.1);
+    triggeredBy.push('ventilation');
+  }
+
+  const level = levelFromCondition(c);
+  const messageKey =
+    level === 'priority' ? 'vatrumPriority' :
+    level === 'attention' ? 'vatrumAttention' : 'vatrumOk';
+
+  return {
+    component: 'vatrum',
+    level,
+    messageKey,
+    triggeredBy,
+    ageYears: inputs.vatrumAge,
+    lifespanYears: vatrumLifespan,
+  };
+}
+
+function ventilationConditionFor(inputs: HouseInputs): ComponentCondition {
+  const conditionValues: Record<string, number> = {
+    sjalvdrag: 0.55,
+    fMekanisk: 0.2,
+    ftxMekanisk: 0.1,
+  };
+  const c = conditionValues[inputs.ventilation] ?? 0.1;
+  const level = levelFromCondition(c, true);
+  const messageKey =
+    level === 'priority' ? 'ventilationPriority' :
+    level === 'attention' ? 'ventilationAttention' : 'ventilationOk';
+  return {
+    component: 'ventilation',
+    level,
+    messageKey,
+    triggeredBy: ['ventilation'],
+  };
+}
+
+function uppvarmningConditionFor(inputs: HouseInputs): ComponentCondition {
+  const conditionValues: Record<string, number> = {
+    direktverkandeEl: 0.45,
+    olja: 0.35,
+    ved: 0.2,
+    pellets: 0.15,
+    luftvarmepump: 0.1,
+    'fjärrvärme': 0.1,
+    bergvarme: 0.05,
+    other: 0.2,
+  };
+  const c = conditionValues[inputs.uppvarmning] ?? 0.2;
+  const level = levelFromCondition(c, true);
+  const messageKey =
+    level === 'priority' ? 'uppvarmningPriority' :
+    level === 'attention' ? 'uppvarmningAttention' : 'uppvarmningOk';
+  return {
+    component: 'uppvarmning',
+    level,
+    messageKey,
+    triggeredBy: ['uppvarmning'],
+  };
+}
+
+// ─── Viewing tips ─────────────────────────────────────────────────────────────
+
+function buildViewingTips(inputs: HouseInputs): string[] {
+  const tips: string[] = [];
+  const slab70s =
+    inputs.byggnadsar >= 1965 &&
+    inputs.byggnadsar <= 1985 &&
+    inputs.grundlaeggning === 'betongplatta';
+
+  if (inputs.byggnadsar < 1960) tips.push('tipOldHouseFoundation');
+  if (slab70s) tips.push('tipSlab70s');
+  if (inputs.grundlaeggning === 'krypgrund') tips.push('tipCrawlSpace');
+  if (inputs.ventilation === 'sjalvdrag') tips.push('tipNaturalDraught');
+  if (inputs.yttertakAge > (roofLifespans[inputs.yttertakType] ?? 30) * 0.6) tips.push('tipOldRoof');
+  if (inputs.vatrumAge != null && inputs.vatrumAge > vatrumLifespan * 0.6) tips.push('tipOldWetRooms');
+  if (inputs.uppvarmning === 'direktverkandeEl') tips.push('tipDirectElectric');
+  if (inputs.uppvarmning === 'olja') tips.push('tipOilHeating');
+
+  // Always include at least 2 generic tips if list is short
+  if (tips.length < 2) tips.push('tipCheckMoisture');
+  if (tips.length < 3) tips.push('tipAskForInvoices');
+
+  return tips.slice(0, 6); // cap at 6
+}
+
+// ─── Green signals ────────────────────────────────────────────────────────────
+
+function buildGreenSignals(inputs: HouseInputs): GreenSignal[] {
+  const signals: GreenSignal[] = [];
+
+  if (inputs.uppvarmning === 'bergvarme') signals.push({ messageKey: 'greenBergvarme' });
+  if (inputs.uppvarmning === 'fjärrvärme') signals.push({ messageKey: 'greenFjärrvärme' });
+  if (inputs.uppvarmning === 'luftvarmepump') signals.push({ messageKey: 'greenLuftvarmepump' });
+  if (inputs.ventilation === 'ftxMekanisk') signals.push({ messageKey: 'greenFtx' });
+  if (inputs.fasadType === 'tegel') signals.push({ messageKey: 'greenTegelFasad' });
+  if (inputs.yttertakType === 'tegeltak' || inputs.yttertakType === 'plattak') {
+    signals.push({ messageKey: 'greenDurableRoof' });
+  }
+
+  return signals;
+}
+
+// ─── Decision points ──────────────────────────────────────────────────────────
+
+export function buildDecisionPoints(conditions: ComponentCondition[]): string[] {
+  const points: string[] = ['demandBuyerInspection'];
+
+  const hasDrainage = conditions.some(
+    (c) => c.component === 'grund' && c.level !== 'ok'
+  );
+  const hasVatrum = conditions.some(
+    (c) => c.component === 'vatrum' && c.level !== 'ok'
+  );
+  const hasRoof = conditions.some(
+    (c) => c.component === 'roof' && c.level !== 'ok'
+  );
+  const hasFacade = conditions.some(
+    (c) => c.component === 'facade' && c.level !== 'ok'
+  );
+  const hasSlab70s = conditions.some(
+    (c) => c.component === 'grund' && c.messageKey === 'grundSlab70s'
+  );
+
+  if (hasRoof || hasFacade || hasDrainage) points.push('askSellerInvoices');
+  if (hasSlab70s) points.push('betongplatta70sCheck');
+  if (hasVatrum) points.push('vatrumCheck');
+  if (hasRoof) points.push('roofSnowCheck');
+
+  return points;
+}
+
+// ─── Cost band ────────────────────────────────────────────────────────────────
+
+function buildCostBand(
+  inputs: HouseInputs,
+  conditions: ComponentCondition[]
+): CostBand {
   const costMins: number[] = [];
   const costLikelys: number[] = [];
   const costMaxs: number[] = [];
+
   function addCost(range: [number, number]) {
     costMins.push(range[0]);
     costLikelys.push(Math.round((range[0] + range[1]) / 2));
     costMaxs.push(range[1]);
   }
 
-  // Add costs if the corresponding component has a flag.
-  if (lifecycleFlags.some((f) => f.component === 'roof')) addCost(roofCosts[inputs.yttertakType] ?? roofCosts.other);
-  if (lifecycleFlags.some((f) => f.component === 'drainage')) addCost(drainageCost);
-  if (lifecycleFlags.some((f) => f.component === 'wetRooms')) addCost(vatrumCost);
-  if (lifecycleFlags.some((f) => f.component === 'facade')) {
-    const cp = fasadCostPerSqm[inputs.fasadType] ?? 1500;
-    if (cp > 0) {
-      const cost = Math.round(inputs.size * cp);
-      addCost([Math.round(cost * 0.8), Math.round(cost * 1.2)]);
+  for (const cc of conditions) {
+    if (cc.level === 'ok') continue;
+    if (cc.component === 'roof') {
+      addCost(roofCosts[inputs.yttertakType] ?? roofCosts.other);
+    }
+    if (cc.component === 'grund') {
+      // Only add drainage cost if we have concrete age data or slab70s rule triggered
+      const hasDrainageAge = inputs.draneringAge != null;
+      const isSlab70s = cc.messageKey === 'grundSlab70s';
+      if (hasDrainageAge || isSlab70s) addCost(drainageCost);
+    }
+    if (cc.component === 'vatrum' && inputs.vatrumAge != null) {
+      addCost(vatrumCost);
+    }
+    if (cc.component === 'facade') {
+      const cp = fasadCostPerSqm[inputs.fasadType] ?? 1500;
+      if (cp > 0) {
+        const cost = Math.round(inputs.size * cp);
+        addCost([Math.round(cost * 0.8), Math.round(cost * 1.2)]);
+      }
     }
   }
 
-  const costBand: CostBand = {
+  return {
     min: costMins.reduce((a, b) => a + b, 0),
     likely: costLikelys.reduce((a, b) => a + b, 0),
     max: costMaxs.reduce((a, b) => a + b, 0),
   };
-
-  return {
-    score,
-    scoreBand: scoreToBand(score),
-    lifecycleFlags,
-    costBand,
-    negotiationChecklist: buildChecklist(lifecycleFlags),
-  };
 }
 
-export function computeRisk(inputs: HouseInputs): RiskOutput {
-  return computeRiskV2(inputs);
-}
+// ─── Main export ──────────────────────────────────────────────────────────────
 
-export function computeRiskV1(inputs: HouseInputs): RiskOutput {
-  const flags: LifecycleFlag[] = [];
-  let totalScore = 0;
-  const costMins: number[] = [];
-  const costLikelys: number[] = [];
-  const costMaxs: number[] = [];
-
-  function addCost(range: [number, number]) {
-    costMins.push(range[0]);
-    costLikelys.push(Math.round((range[0] + range[1]) / 2));
-    costMaxs.push(range[1]);
-  }
-
-  // ── Roof ──────────────────────────────────────────────────────────────────
-  const roofLifespan = roofLifespans[inputs.yttertakType] ?? roofLifespans.other;
-  const roofRatio = inputs.yttertakAge / roofLifespan;
-  if (roofRatio >= HIGH_RISK_THRESHOLD) {
-    flags.push({ component: 'roof', level: 'highRisk', triggeredBy: ['yttertakType', 'yttertakAge'], contributionPercent: 25, messageKey: 'roofHighRisk' });
-    totalScore += 25;
-    addCost(roofCosts[inputs.yttertakType] ?? roofCosts.other);
-  } else if (roofRatio >= RISK_THRESHOLD) {
-    flags.push({ component: 'roof', level: 'risk', triggeredBy: ['yttertakType', 'yttertakAge'], contributionPercent: 15, messageKey: 'roofRisk' });
-    totalScore += 15;
-    addCost(roofCosts[inputs.yttertakType] ?? roofCosts.other);
-  }
-
-  // ── Facade ────────────────────────────────────────────────────────────────
-  const fasadLifespan = fasadLifespans[inputs.fasadType];
-  if (fasadLifespan != null) {
-    const ratio = inputs.fasadAge / fasadLifespan;
-    if (ratio >= HIGH_RISK_THRESHOLD) {
-      flags.push({ component: 'facade', level: 'highRisk', triggeredBy: ['fasadType', 'fasadAge'], contributionPercent: 20, messageKey: 'facadeHighRisk' });
-      totalScore += 20;
-      const cp = fasadCostPerSqm[inputs.fasadType] ?? 1500;
-      if (cp > 0) {
-        const cost = Math.round(inputs.size * cp);
-        addCost([Math.round(cost * 0.8), Math.round(cost * 1.2)]);
-      }
-    } else if (ratio >= RISK_THRESHOLD) {
-      flags.push({ component: 'facade', level: 'risk', triggeredBy: ['fasadType', 'fasadAge'], contributionPercent: 12, messageKey: 'facadeRisk' });
-      totalScore += 12;
-      const cp = fasadCostPerSqm[inputs.fasadType] ?? 1500;
-      if (cp > 0) {
-        const cost = Math.round(inputs.size * cp);
-        addCost([Math.round(cost * 0.8), Math.round(cost * 1.2)]);
-      }
-    }
-  }
-
-  // ── Drainage (optional direct input) ─────────────────────────────────────
-  if (inputs.draneringAge != null) {
-    const ratio = inputs.draneringAge / drainageLifespan;
-    if (ratio >= HIGH_RISK_THRESHOLD) {
-      flags.push({ component: 'drainage', level: 'highRisk', triggeredBy: ['draneringAge'], contributionPercent: 15, messageKey: 'drainageHighRisk' });
-      totalScore += 15;
-      addCost(drainageCost);
-    } else if (ratio >= RISK_THRESHOLD) {
-      flags.push({ component: 'drainage', level: 'risk', triggeredBy: ['draneringAge'], contributionPercent: 8, messageKey: 'drainageRisk' });
-      totalScore += 8;
-      addCost(drainageCost);
-    }
-  }
-
-  // ── Ventilation ───────────────────────────────────────────────────────────
-  if (inputs.ventilation === 'sjalvdrag') {
-    flags.push({ component: 'ventilation', level: 'risk', triggeredBy: ['ventilation'], contributionPercent: 10, messageKey: 'ventilationRisk' });
-    totalScore += 10;
-  }
-
-  // ── Heating ───────────────────────────────────────────────────────────────
-  if (inputs.uppvarmning === 'direktverkandeEl') {
-    flags.push({ component: 'heating', level: 'risk', triggeredBy: ['uppvarmning'], contributionPercent: 8, messageKey: 'heatingRisk' });
-    totalScore += 8;
-  }
-
-  // ── Wet rooms (optional) ─────────────────────────────────────────────────
-  if (inputs.vatrumAge != null) {
-    const ratio = inputs.vatrumAge / vatrumLifespan;
-    if (ratio >= HIGH_RISK_THRESHOLD) {
-      flags.push({ component: 'wetRooms', level: 'highRisk', triggeredBy: ['vatrumAge'], contributionPercent: 12, messageKey: 'wetRoomsHighRisk' });
-      totalScore += 12;
-      addCost(vatrumCost);
-    } else if (ratio >= RISK_THRESHOLD) {
-      flags.push({ component: 'wetRooms', level: 'risk', triggeredBy: ['vatrumAge'], contributionPercent: 6, messageKey: 'wetRoomsRisk' });
-      totalScore += 6;
-      addCost(vatrumCost);
-    }
-  }
-
-  // ── Suterrang / betongplatta 70s auto-rule ────────────────────────────────
-  if (
-    inputs.byggnadsar >= 1965 &&
-    inputs.byggnadsar <= 1985 &&
-    inputs.grundlaeggning === 'betongplatta' &&
-    !flags.some((f) => f.component === 'drainage')
-  ) {
-    flags.push({ component: 'drainage', level: 'risk', triggeredBy: ['byggnadsar', 'grundlaeggning'], contributionPercent: 10, messageKey: 'betongplatta70s' });
-    totalScore += 10;
-    addCost(drainageCost);
-  }
-
-  const score = Math.min(100, Math.max(0, totalScore));
-  const minC = costMins.reduce((a, b) => a + b, 0);
-  const likelyC = costLikelys.reduce((a, b) => a + b, 0);
-  const maxC = costMaxs.reduce((a, b) => a + b, 0);
-
-  const costBand: CostBand = { min: minC, likely: likelyC, max: maxC };
+export function computeRisk(inputs: HouseInputs): ConditionOutput {
+  const componentConditions: ComponentCondition[] = [
+    roofCondition(inputs),
+    facadeCondition(inputs),
+    grundCondition(inputs),
+    vatrumCondition(inputs),
+    ventilationConditionFor(inputs),
+    uppvarmningConditionFor(inputs),
+  ];
 
   return {
-    score,
-    scoreBand: scoreToBand(score),
-    lifecycleFlags: flags,
-    costBand,
-    negotiationChecklist: buildChecklist(flags),
+    componentConditions,
+    costBand: buildCostBand(inputs, componentConditions),
+    viewingTips: buildViewingTips(inputs),
+    greenSignals: buildGreenSignals(inputs),
   };
 }

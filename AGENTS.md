@@ -32,6 +32,7 @@ Roadmap source of truth: `docs/roadmap.md`.
 - Every issue must link to an epic (or meta) in the body: `Related: #<epic>`.
 - Every commit message must reference an issue in the subject: `refs #123`.
   Example: `fix(ui): align theme chips (refs #123)`
+- When closing an issue or completing a milestone, update the `## Project Status` section in `README.md` in the same commit.
 
 ## Running a Single Test File
 
@@ -59,7 +60,7 @@ src/
     services/riskEngine.ts  # Pure function: computeRisk(inputs) → RiskOutput
     services/storage.ts     # AsyncStorage CRUD for reports
     services/settings.ts    # AsyncStorage for AppSettings + dev unlock
-    services/purchase.ts    # Free/paid tier gate (IAP STUB — see below)
+    services/purchase.ts    # Free/paid tier gate (IAP via iap.ts)
     validation.ts           # validateNumeric, validateAge, etc.
   context/SettingsContext.tsx  # React context for locale + devUnlock
   i18n/translations.ts     # i18n-js instance with en + sv translations
@@ -126,7 +127,9 @@ Special rule: `byggnadsar` 1965–1985 + `grundlaeggning === 'betongplatta'` →
 
 ## IAP (Purchase Service)
 
-`src/core/services/purchase.ts` — `unlockPurchased()` is a **stub** that sets a flag in AsyncStorage. There is no real in-app purchase integration. Before App Store submission, replace with `expo-in-app-purchases`.
+`src/core/services/iap.ts` — lazy-loads `expo-in-app-purchases` to avoid runtime crashes in Expo Go. `src/core/services/purchase.ts` orchestrates upgrade/restore and persists the `purchased` flag via AsyncStorage. `src/core/services/iapConfig.ts` holds product IDs: iOS `com.husoga.pro` is set; Android `productId` is `null` until the Play Console product is created.
+
+For build and store submission steps see `docs/deployment.md`. For store account setup see `docs/commerce/iap-setup-sweden-enskild-firma.md`.
 
 ---
 
@@ -143,3 +146,17 @@ Never claim "BBR-compliant", "Official risk rating", or "Approved". The disclaim
 ## Swedish Field Names
 
 Model fields and enum values use Swedish building terminology (`byggnadstyp`, `byggnadsar`, `grundlaeggning`, `yttertakType`, `sjalvdrag`, `betongplatta`, etc.). Do not anglicize them — they are stored in AsyncStorage and changing them is a breaking schema change.
+
+## Agent Roles & Permissions
+
+| Agent         | Purpose                                          | Can edit? |
+|---------------|--------------------------------------------------|-----------|
+| `build`       | All code changes, commands, and commits          | ✅ Yes    |
+| `strategist`  | Swedish market, pricing, and business strategy   | ❌ No     |
+| `mobilepro`   | Mobile product, conversion, and ASO advice       | ❌ No     |
+| `besiktning`  | Domain accuracy, risk logic, SBR/Anticimex norms | ❌ No     |
+| `legal`       | Swedish law, GDPR, disclaimers, marknadsföring   | ❌ No     |
+| `coordinator` | Cross-functional synthesis of all advisor views  | ❌ No     |
+
+**Only Build may create, edit, or delete files or run bash commands.**
+Switch between agents with Tab.

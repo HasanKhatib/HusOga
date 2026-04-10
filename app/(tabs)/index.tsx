@@ -4,9 +4,36 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { deleteReport, listReports } from '../../src/core/services/storage';
 import { i18n } from '../../src/i18n/translations';
-import type { Report } from '../../src/core/models/types';
+import type { Report, ComponentCondition } from '../../src/core/models/types';
 import { Banner, Card, PageHeader } from '../../src/ui/components';
 import { useTheme } from '../../src/ui/ThemeProvider';
+
+const COMPONENT_ORDER: ComponentCondition['component'][] = [
+  'roof', 'facade', 'grund', 'vatrum', 'ventilation', 'uppvarmning',
+];
+
+function levelColor(level: ComponentCondition['level']): string {
+  if (level === 'priority') return '#E5484D';
+  if (level === 'attention') return '#E7A92E';
+  return '#1FA971';
+}
+
+function TrafficLightDots({ conditions }: { conditions: ComponentCondition[] }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 5, marginTop: 8 }}>
+      {COMPONENT_ORDER.map((name) => {
+        const cc = conditions.find((c) => c.component === name);
+        const color = cc ? levelColor(cc.level) : '#888';
+        return (
+          <View
+            key={name}
+            style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }}
+          />
+        );
+      })}
+    </View>
+  );
+}
 
 export default function ReportsTab() {
   const t = useTheme();
@@ -22,12 +49,6 @@ export default function ReportsTab() {
   }, []);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-
-  function bandPill(band: string) {
-    if (band === 'high') return { bg: '#E5484D', text: '#fff' };
-    if (band === 'medium') return { bg: '#E7A92E', text: '#0B1220' };
-    return { bg: '#1FA971', text: '#fff' };
-  }
 
   async function handleDelete(r: Report) {
     const label = r.houseLabel || i18n.t('report');
@@ -64,7 +85,6 @@ export default function ReportsTab() {
         }
         renderItem={({ item: r }) => {
           const label = r.houseLabel || `${i18n.t('report')} ${r.timestamp.slice(0, 10)}`;
-          const pill = bandPill(r.outputs.scoreBand);
           return (
             <Pressable onPress={() => router.push({ pathname: '/result', params: { reportId: r.id } })}>
               <Card>
@@ -74,20 +94,7 @@ export default function ReportsTab() {
                       {label}
                     </Text>
                     <Text style={[styles.meta, { color: t.colors.text2 }]}>{r.timestamp.slice(0, 10)}</Text>
-                    <View style={{ height: 10 }} />
-                    <View
-                      style={{
-                        alignSelf: 'flex-start',
-                        paddingHorizontal: 14,
-                        paddingVertical: 8,
-                        borderRadius: 999,
-                        backgroundColor: pill.bg,
-                      }}
-                    >
-                      <Text style={{ color: pill.text, fontWeight: '800' }}>
-                        {r.outputs.score} - {i18n.t(r.outputs.scoreBand)}
-                      </Text>
-                    </View>
+                    <TrafficLightDots conditions={r.outputs.componentConditions} />
                   </View>
                   <Pressable onPress={() => handleDelete(r)} hitSlop={10}>
                     <Text style={{ fontSize: 22, color: t.colors.danger }}>🗑</Text>
@@ -107,3 +114,4 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
   meta: { fontSize: 14, fontWeight: '600' },
 });
+
