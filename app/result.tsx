@@ -153,6 +153,21 @@ export default function ResultScreen() {
     if (reportId) getReport(reportId).then(setReport);
   }, [reportId]);
 
+  // Auto-migrate old reports (pre-2.0.0) that lack componentConditions.
+  // Recalculate and persist silently so the screen never crashes.
+  useEffect(() => {
+    if (!report) return;
+    const isLegacy = !report.outputs.componentConditions;
+    if (isLegacy) {
+      const updated: Report = {
+        ...report,
+        outputs: computeRisk(report.inputs),
+        modelVersion: MODEL_VERSION,
+      };
+      saveReport(updated).then(() => setReport(updated));
+    }
+  }, [report]);
+
   if (!report) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }}>
@@ -164,8 +179,10 @@ export default function ResultScreen() {
   const { outputs } = report;
   const entitled = settings.purchased || isDevUnlocked;
   const isStale = report.modelVersion !== MODEL_VERSION;
-  const decisionPoints = buildDecisionPoints(outputs.componentConditions);
-  const hasAnyCost = outputs.costBand.likely > 0;
+  // Guard: componentConditions may be undefined on legacy reports during migration
+  const conditions = outputs.componentConditions ?? [];
+  const decisionPoints = buildDecisionPoints(conditions);
+  const hasAnyCost = (outputs.costBand?.likely ?? 0) > 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.colors.bg }} edges={['top', 'bottom']}>
@@ -209,7 +226,7 @@ export default function ResultScreen() {
           {/* FREE: Konditionsöversikt — traffic-light summary */}
           <Card>
             <SectionTitle>{i18n.t('konditionsoverikt')}</SectionTitle>
-            {outputs.componentConditions.map((cc) => (
+            {conditions.map((cc) => (
               <ComponentRow key={cc.component} cc={cc} />
             ))}
           </Card>
@@ -217,11 +234,11 @@ export default function ResultScreen() {
           <View style={{ height: t.space.xl }} />
 
           {/* FREE: Viewing tips */}
-          {outputs.viewingTips.length > 0 ? (
+          {(outputs.viewingTips ?? []).length > 0 ? (
             <>
               <Card>
                 <SectionTitle>{i18n.t('viewingTipsTitle')}</SectionTitle>
-                {outputs.viewingTips.map((key, i) => (
+                {(outputs.viewingTips ?? []).map((key, i) => (
                   <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
                     <Text style={{ color: t.colors.info, fontWeight: '900', fontSize: 14, marginTop: 2 }}>→</Text>
                     <Text style={{ flex: 1, color: t.colors.text, fontWeight: '600', fontSize: 14, lineHeight: 21 }}>
@@ -293,7 +310,7 @@ export default function ResultScreen() {
               <View style={{ height: t.space.xl }} />
               <Card>
                 <SectionTitle>{i18n.t('lifetimeAnalysisTitle')}</SectionTitle>
-                {outputs.componentConditions.map((cc) => {
+                {conditions.map((cc) => {
                   if (cc.ageYears == null || cc.lifespanYears == null) return null;
                   const pct = Math.round((cc.ageYears / cc.lifespanYears) * 100);
                   const dotColor = levelColor(cc.level, t);
@@ -321,12 +338,12 @@ export default function ResultScreen() {
           ) : null}
 
           {/* PAID: Green strengths */}
-          {entitled && outputs.greenSignals.length > 0 ? (
+          {entitled && (outputs.greenSignals ?? []).length > 0 ? (
             <>
               <View style={{ height: t.space.xl }} />
               <Card>
                 <SectionTitle>{i18n.t('greenStrengthsTitle')}</SectionTitle>
-                {outputs.greenSignals.map((s, i) => (
+                {(outputs.greenSignals ?? []).map((s, i) => (
                   <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
                     <Text style={{ color: t.colors.ok, fontWeight: '900', fontSize: 16, marginTop: 1 }}>✓</Text>
                     <Text style={{ flex: 1, color: t.colors.text, fontWeight: '600', fontSize: 14, lineHeight: 21 }}>

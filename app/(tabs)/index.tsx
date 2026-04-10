@@ -18,7 +18,17 @@ function levelColor(level: ComponentCondition['level']): string {
   return '#1FA971';
 }
 
-function TrafficLightDots({ conditions }: { conditions: ComponentCondition[] }) {
+function TrafficLightDots({ conditions }: { conditions: ComponentCondition[] | undefined }) {
+  // Guard against old reports that predate MODEL_VERSION 2.0.0 (componentConditions may be undefined)
+  if (!conditions || conditions.length === 0) {
+    return (
+      <View style={{ flexDirection: 'row', gap: 5, marginTop: 8 }}>
+        {COMPONENT_ORDER.map((name) => (
+          <View key={name} style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#888' }} />
+        ))}
+      </View>
+    );
+  }
   return (
     <View style={{ flexDirection: 'row', gap: 5, marginTop: 8 }}>
       {COMPONENT_ORDER.map((name) => {
