@@ -12,11 +12,12 @@ This roadmap is a checklist. Items are checked when the linked GitHub issue is c
 2. ~~Report UX (basic vs detailed, paywall)~~ ✅
 3. ~~Sources & references (in-app)~~ ✅
 4. ~~Plans + IAP (free vs paid rules)~~ ✅
-5. Condition Engine v3 (traffic-light output, no aggregate score)
-6. Result screen rewrite (traffic-light layout, progressive disclosure)
-7. PDF/share rewrite (buyer-quality output)
-8. Website (single HTML page)
-9. App Store publishing (iOS + Android)
+5. ~~Condition Engine v3 (traffic-light output, no aggregate score)~~ ✅
+6. ~~Result screen rewrite (traffic-light layout, progressive disclosure)~~ ✅
+7. ~~PDF/share rewrite (buyer-quality output)~~ ✅
+8. ~~Website (single HTML page)~~ ✅
+9. App Store publishing (iOS + Android) ← blocked on #10
+10. RevenueCat IAP migration ← **unblocks Android build** 🔴
 
 ## Epics
 
@@ -119,6 +120,21 @@ Tasks:
 - [x] #71 9d: Screenshot specs and mockup guide
 - [ ] #73 9f: iOS build and TestFlight submission
 - [ ] #74 9g: Google Play account setup and Android submission
+
+### 10) RevenueCat IAP Migration ← **CURRENT PRIORITY**
+
+Epic: #75
+
+Replaces the defunct `expo-in-app-purchases` (incompatible with Expo SDK 54, removed from
+Expo monorepo) with `react-native-purchases` (RevenueCat). Root cause of all 4 Android
+EAS build failures (`EAS_BUILD_UNKNOWN_GRADLE_ERROR`).
+
+Tasks:
+- [x] #76 Remove expo-in-app-purchases, install react-native-purchases@9.15.2
+- [x] #77 Rewrite iap.ts + iapConfig.ts for RevenueCat SDK
+- [x] #78 Initialise RevenueCat in app/_layout.tsx
+- [ ] #79 **[HUMAN]** Create RevenueCat project + set API keys as EAS env vars
+- [x] #80 Update deployment.md + README for RevenueCat
 
 ## Rollout
 

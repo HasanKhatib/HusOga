@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
-import type * as InAppPurchases from 'expo-in-app-purchases';
-import { IAP_CONFIG } from './iapConfig';
+import { RC_CONFIG } from './iapConfig';
 
 export type IapItemDetails = {
   productId: string;
@@ -14,125 +13,93 @@ export type IapPlatformStatus =
   | { kind: 'pending'; reason: 'android_purchase_setup_pending' }
   | { kind: 'unsupported'; reason: 'iap_not_supported_on_web' };
 
-let connected = false;
+let rcModule: typeof import('react-native-purchases') | null = null;
 
-let iapPromise: Promise<typeof import('expo-in-app-purchases') | null> | null = null;
-
-async function getIapModule(): Promise<typeof import('expo-in-app-purchases') | null> {
+/**
+ * Lazy-load react-native-purchases to avoid crashes in environments
+ * where the native module is not linked (e.g. Expo Go).
+ */
+async function getRCModule(): Promise<typeof import('react-native-purchases') | null> {
   if (Platform.OS === 'web') return null;
-  if (!iapPromise) {
-    // Avoid crashing on runtimes where the native module isn't present (e.g. Expo Go).
-    iapPromise = import('expo-in-app-purchases')
-      .then((m) => m)
-      .catch(() => null);
+  if (!rcModule) {
+    try {
+      rcModule = await import('react-native-purchases');
+    } catch {
+      rcModule = null;
+    }
   }
-  return iapPromise;
+  return rcModule;
 }
 
 export function getIapStatus(): IapPlatformStatus {
-  if (Platform.OS === 'ios') {
-    return { kind: 'supported', productId: IAP_CONFIG.ios.productId };
-  }
-  if (Platform.OS === 'android') {
-    if (!IAP_CONFIG.android.productId) {
+  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+    if (!RC_CONFIG.apiKey) {
+      // API key not yet set — pending developer setup
       return { kind: 'pending', reason: 'android_purchase_setup_pending' };
     }
-    return { kind: 'supported', productId: IAP_CONFIG.android.productId };
+    return { kind: 'supported', productId: RC_CONFIG.productId };
   }
   return { kind: 'unsupported', reason: 'iap_not_supported_on_web' };
-}
-
-async function ensureConnected(): Promise<void> {
-  if (connected) return;
-  const IAP = await getIapModule();
-  if (!IAP) throw new Error('iap_unavailable');
-  await IAP.connectAsync();
-  connected = true;
 }
 
 export async function getProducts(): Promise<IapItemDetails[]> {
   const status = getIapStatus();
   if (status.kind !== 'supported') return [];
-  const IAP = await getIapModule();
-  if (!IAP) return [];
-  await ensureConnected();
-  const { responseCode, results } = await IAP.getProductsAsync([status.productId]);
-  if (responseCode !== IAP.IAPResponseCode.OK || !results) return [];
-  return results.map((r) => ({
-    productId: r.productId,
-    title: r.title,
-    description: r.description,
-    price: r.price,
-  }));
+  const RC = await getRCModule();
+  if (!RC) return [];
+  try {
+    const offerings = await RC.default.getOfferings();
+    const current = offerings.current;
+    if (!current) return [];
+    return current.availablePackages.map((pkg) => ({
+      productId: pkg.product.identifier,
+      title: pkg.product.title,
+      description: pkg.product.description,
+      price: pkg.product.priceString,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 /**
- * Start a purchase flow and resolve when the transaction is finished.
- * This is a client-only entitlement; server-side validation is out of scope for now.
+ * Initiate a purchase flow for the pro entitlement.
+ * Resolves with 'purchased' on success, throws on cancellation or failure.
  */
-export async function purchaseProduct(productId: string): Promise<'purchased'> {
-  const IAP = await getIapModule();
-  if (!IAP) throw new Error('iap_unavailable');
-  await ensureConnected();
+export async function purchaseProduct(_productId: string): Promise<'purchased'> {
+  const RC = await getRCModule();
+  if (!RC) throw new Error('iap_unavailable');
 
-  // Cache details (required on iOS).
-  await IAP.getProductsAsync([productId]);
+  try {
+    const offerings = await RC.default.getOfferings();
+    const current = offerings.current;
+    if (!current) throw new Error('purchase_failed');
 
-  const result = await new Promise<'purchased'>((resolve, reject) => {
-    let done = false;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    // Find the package matching our product ID
+    const pkg = current.availablePackages.find(
+      (p) => p.product.identifier === RC_CONFIG.productId,
+    );
+    if (!pkg) throw new Error('purchase_failed');
 
-    const finish = (fn: () => void) => {
-      if (done) return;
-      done = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      fn();
-    };
-
-    // setPurchaseListener is global; set it per-attempt so each purchase has its own resolver.
-    IAP.setPurchaseListener(async ({ responseCode, results, errorCode }) => {
-      if (done) return;
-
-      if (responseCode === IAP.IAPResponseCode.USER_CANCELED) {
-        finish(() => reject(new Error('purchase_cancelled')));
-        return;
-      }
-      if (responseCode === IAP.IAPResponseCode.ERROR) {
-        finish(() => reject(new Error(errorCode ? String(errorCode) : 'purchase_failed')));
-        return;
-      }
-      if (responseCode !== IAP.IAPResponseCode.OK || !results) return;
-
-      for (const purchase of results) {
-        if (purchase.productId !== productId) continue;
-        try {
-          // non-consumable
-          await IAP.finishTransactionAsync(purchase, false);
-          finish(() => resolve('purchased'));
-        } catch (e) {
-          finish(() => reject(e instanceof Error ? e : new Error('finishTransaction failed')));
-        }
-      }
-    });
-
-    IAP.purchaseItemAsync(productId).catch((e) => {
-      finish(() => reject(e instanceof Error ? e : new Error('purchase_failed')));
-    });
-
-    // Timeout safety
-    timeoutId = setTimeout(() => {
-      finish(() => reject(new Error('purchase_timeout')));
-    }, 120_000);
-  });
-
-  return result;
+    await RC.default.purchasePackage(pkg);
+    return 'purchased';
+  } catch (e: unknown) {
+    const err = e as { userCancelled?: boolean; message?: string };
+    if (err?.userCancelled === true) throw new Error('purchase_cancelled');
+    throw new Error(err?.message ?? 'purchase_failed');
+  }
 }
 
-export async function restorePurchases(productId: string): Promise<boolean> {
-  const IAP = await getIapModule();
-  if (!IAP) return false;
-  await ensureConnected();
-  const { responseCode, results } = await IAP.getPurchaseHistoryAsync();
-  if (responseCode !== IAP.IAPResponseCode.OK || !results) return false;
-  return results.some((p) => p.productId === productId);
+/**
+ * Check whether the user has previously purchased the pro entitlement.
+ */
+export async function restorePurchases(_productId: string): Promise<boolean> {
+  const RC = await getRCModule();
+  if (!RC) return false;
+  try {
+    const customerInfo = await RC.default.restorePurchases();
+    return customerInfo.entitlements.active[RC_CONFIG.entitlementId] !== undefined;
+  } catch {
+    return false;
+  }
 }

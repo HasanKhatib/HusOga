@@ -14,7 +14,7 @@ Offline-only Swedish villa risk assessment app. No backend, no accounts, no netw
 | Tests | Jest + ts-jest (pure Node, no device needed) |
 | Builds | EAS Build (Expo Application Services) |
 | Distribution | App Store Connect (iOS) + Google Play Console (Android) |
-| IAP | `expo-in-app-purchases` — one-time non-consumable unlock |
+| IAP | `react-native-purchases` (RevenueCat) — one-time non-consumable unlock |
 | Subscriptions | None — one-time purchase only (no subscription management needed) |
 
 ## Monetization
@@ -70,18 +70,25 @@ Flutter v1 source is preserved on the `flutter-archive` branch.
 
 ## Project Status
 
-**Completed:** Risk engine v2, Basic/Detailed report UX, in-app sources, IAP wiring, and the full **Condition Engine v3** rewrite are all shipped. The single aggregate score has been replaced with a per-component traffic-light konditionsöversikt (6 rows: Tak, Fasad, Grund, Våtrum, Ventilation, Uppvärmning). Result screen, Detailed screen, PDF export, and share text all reflect the new structure. MODEL_VERSION is 2.0.0.
+**Completed:** Risk engine v2, Basic/Detailed report UX, in-app sources, IAP wiring, and the full **Condition Engine v3** rewrite are all shipped. The single aggregate score has been replaced with a per-component traffic-light konditionsöversikt (6 rows). MODEL_VERSION is 2.0.0.
 
 **Free/paid split:**
 - Free: traffic-light konditionsöversikt (6 rows) + viewing tips
 - Paid: decision points, cost forecast, lifetime analysis, green recommendations, PDF export
 
-**Epic 9 — App Store publishing (in progress):**
-- ✅ #69 Android adaptive icon — transparent-background foreground layer generated
-- ✅ #70 App Store + Play Store listing copy — `docs/marketing/app-store-copy.md`
-- ✅ #71 Screenshot specs + content plan — `docs/marketing/screenshot-specs.md`
-- ✅ #72 Website `index.html` with privacy policy (ready for Cloudflare Pages deploy)
-- 🔄 #73 iOS EAS build + TestFlight submission — in progress
-- 🔄 #74 Android EAS build + Play Console submission — in progress
+**Epic 10 — RevenueCat IAP migration (current priority):**
+- ✅ #76 Replaced expo-in-app-purchases with react-native-purchases@9.15.2
+- ✅ #77 Rewrote iap.ts + iapConfig.ts for RevenueCat SDK
+- ✅ #78 RevenueCat initialised in app/_layout.tsx
+- ⏳ #79 **[HUMAN TASK]** Create RevenueCat project + set `REVENUECAT_IOS_API_KEY` + `REVENUECAT_ANDROID_API_KEY` as EAS env vars — see issue #79 for step-by-step guide
+- ✅ #80 Updated deployment.md + README
 
-_Last updated: 2026-04-10 (refs #69, #70, #71, #72, #73, #74)_
+**Epic 9 — App Store publishing (blocked on Epic 10):**
+- ✅ #69 Android adaptive icon
+- ✅ #70 App Store + Play Store listing copy
+- ✅ #71 Screenshot specs
+- ✅ #72 Website with privacy policy
+- ⏳ #73 iOS EAS build — run `eas build --platform ios --profile production` interactively in your terminal after #79 is done
+- ⏳ #74 Android EAS build — run `eas build --platform android --profile production --no-wait` after #79 is done
+
+_Last updated: 2026-04-12 (refs #75, #76, #77, #78, #79, #80)_

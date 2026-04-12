@@ -58,23 +58,29 @@ Do not change these without intentionally creating a new app entry in the stores
 | iOS | `com.husoga.app` (App Store Connect) |
 | Android | `com.husoga.app` (Play Console) |
 
-## IAP Product IDs
+## IAP — RevenueCat
 
-| Platform | Product ID | Status |
-|---|---|---|
-| iOS | `com.husoga.pro` | Configured in `iapConfig.ts` |
-| Android | `com.husoga.pro` | Pending — set after Play Console product is created |
+HusÖga uses RevenueCat (`react-native-purchases`) for IAP on both platforms.
+
+| Key | Value |
+|---|---|
+| Entitlement ID | `pro` |
+| Product ID (both stores) | `com.husoga.pro` |
+| iOS API key | `REVENUECAT_IOS_API_KEY` EAS env var (sensitive) |
+| Android API key | `REVENUECAT_ANDROID_API_KEY` EAS env var (sensitive) |
+
+API keys are stored as EAS project environment variables (never in git).
+See `docs/commerce/revenuecat-setup.md` for the full setup guide.
 
 ## Android Release Checklist
 
 1. Run `eas build --platform android --profile preview` to produce an AAB.
 2. Download the AAB from the EAS build page.
 3. Upload to Play Console → Internal testing track (draft release is fine).
-4. Once uploaded, go to Monetize → Products → In-app products.
-5. Create a **Managed product** (non-consumable) with product ID `com.husoga.pro`.
-6. Set `IAP_CONFIG.android.productId = 'com.husoga.pro'` in `src/core/services/iapConfig.ts`.
-7. Commit with `refs #49` and close issue #49.
-8. For production release, run `eas build --platform android --profile production` then `eas submit --platform android`.
+4. Ensure the RevenueCat project has the Android app configured with package `com.husoga.app` — see `docs/commerce/revenuecat-setup.md`.
+5. Ensure `REVENUECAT_ANDROID_API_KEY` EAS env var is set — see RevenueCat dashboard → Project Settings → API Keys.
+6. Ensure the `com.husoga.pro` product is created in Play Console and attached to the `pro` entitlement in the RevenueCat dashboard.
+7. For production release, run `eas build --platform android --profile production` then `eas submit --platform android`.
 
 ## iOS Release Checklist
 
