@@ -70,22 +70,19 @@ Flutter v1 source is preserved on the `flutter-archive` branch.
 
 ## Project Status
 
-**Both stores submitted.** All development epics are complete.
+**Feature-complete. Both stores loaded. Pre-launch checklist in progress.**
 
-**Free/paid split:**
-- Free: traffic-light konditionsöversikt (6 rows) + viewing tips
-- Paid: decision points, cost forecast, lifetime analysis, green recommendations, PDF export
+| Platform | Status |
+|---|---|
+| iOS | Build 6 (1.0.0) processed by Apple — available in TestFlight |
+| Android | AAB in Play Console Internal Testing |
 
-**Build status:**
-- ✅ Android build `6724b568` — finished, AAB uploaded to Play Console Internal Testing
-- ✅ iOS build `fe777117` — finished, IPA ready
-- ⏳ iOS submit — `eas submit --platform ios` failing with opaque ASC error; check Expo dashboard for details: https://expo.dev/accounts/hasankhatib/projects/husoga/submissions/
+**Pre-launch checklist** (see `docs/roadmap.md` for detail):
+- [ ] #81 Deploy website to Cloudflare Pages (`husoga.app`)
+- [ ] #82 Create `com.husoga.pro` IAP in App Store Connect
+- [ ] #83 Create `com.husoga.pro` IAP in Google Play Console
+- [ ] #84 Create App Store screenshots (5 frames)
+- [ ] #85 TestFlight test + submit for App Store Review
+- [ ] #86 Promote Android to Production
 
-**Remaining human tasks before public release:**
-1. Fix iOS App Store Connect submission (check Expo dashboard error detail)
-2. Create `com.husoga.pro` IAP product in App Store Connect (Monetize → In-App Purchases)
-3. Create `com.husoga.pro` IAP product in Google Play Console (Monetize → In-app products)
-4. Submit for App Store review once on TestFlight
-5. Promote Android from Internal Testing → Production in Play Console
-
-_Last updated: 2026-04-12 (refs #54, #73, #74, #75)_
+_Last updated: 2026-04-12 (refs #81–#86)_

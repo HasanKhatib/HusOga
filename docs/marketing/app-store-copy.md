@@ -147,12 +147,14 @@ https://husoga.app/#privacy
 
 ---
 
-## Notes for Submission
+## Store Metadata
 
-- **Privacy policy URL** (required for both stores): `https://husoga.app/#privacy`
-  - Deploy `index.html` to Cloudflare Pages pointing at `husoga.app` first.
-- **App Store Connect IAP**: Create non-consumable product `com.husoga.pro` before submitting for review.
-- **Google Play IAP**: Create managed product `com.husoga.pro` in Monetize → Products after first AAB upload.
-- **Support URL**: `https://husoga.app`
-- **Marketing URL**: `https://husoga.app`
-- **Copyright**: `© 2026 Hasan Al-Khatib`
+| Field | Value |
+|---|---|
+| Privacy policy URL | `https://husoga.app/#privacy` |
+| Support URL | `https://husoga.app` |
+| Marketing URL | `https://husoga.app` |
+| Copyright | `© 2026 Hasan Al-Khatib` |
+| iOS App ID | `6761786637` |
+| Bundle ID (both) | `com.husoga.app` |
+| IAP product ID (both) | `com.husoga.pro` |

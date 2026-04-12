@@ -1,151 +1,84 @@
 # Roadmap
 
-This repo uses GitHub Issues to track all meaningful work.
+Work is tracked in GitHub Issues. This document is the forward-looking view.
+For the full development history and key decisions, see `docs/history.md`.
 
-Meta tracking issue: #2
+---
 
-This roadmap is a checklist. Items are checked when the linked GitHub issue is closed.
+## What's Built
 
-## Priority Order
+HusÖga is a complete, offline-only Swedish villa condition assessment tool for house
+buyers. The core product is feature-complete and submitted to both stores.
 
-1. ~~Risk Engine v2 (logic)~~ ✅
-2. ~~Report UX (basic vs detailed, paywall)~~ ✅
-3. ~~Sources & references (in-app)~~ ✅
-4. ~~Plans + IAP (free vs paid rules)~~ ✅
-5. ~~Condition Engine v3 (traffic-light output, no aggregate score)~~ ✅
-6. ~~Result screen rewrite (traffic-light layout, progressive disclosure)~~ ✅
-7. ~~PDF/share rewrite (buyer-quality output)~~ ✅
-8. ~~Website (single HTML page)~~ ✅
-9. ~~App Store publishing (iOS + Android)~~ ✅
-10. ~~RevenueCat IAP migration~~ ✅
+**Core features:**
+- Per-component traffic-light konditionsöversikt (6 components: roof, drainage, wet rooms, plumbing, heating, ventilation)
+- Condition engine based on Swedish technical lifespan data and construction-era risk factors
+- Viewing tips tailored to results (free)
+- Decision points, cost forecast (SEK), lifetime analysis, green recommendations (Pro)
+- PDF export and text share (Pro)
+- Full Swedish + English i18n
+- Offline-only, no accounts, no tracking
 
-## Epics
+**Free / Pro split:**
+- Free: traffic-light summary + viewing tips + up to 2 saved reports
+- Pro: decision points, cost forecast, lifetime analysis, green recommendations, PDF export, unlimited reports
 
-### 1) Risk Engine v2 ✅
+---
 
-Epic: #16
+## Platforms
 
-Tasks:
-- [x] #21 Spec: Risk Engine v2 formulas + component weights
-- [x] #22 Implement: continuous deterioration curve f(age/lifespan)
-- [x] #23 Implement: explicit component weights (BCI aggregation)
-- [x] #24 Implement: defect multipliers for Swedish risk patterns
-- [x] #25 Bump MODEL_VERSION and add stale report detection + recalc (ties to #13)
-- [x] #26 Tests: expand riskEngine coverage for v2
+| Platform | Current state | Store link |
+|---|---|---|
+| iOS | Build 6 (1.0.0) in TestFlight — not yet in App Store | [App Store Connect](https://appstoreconnect.apple.com/apps/6761786637) |
+| Android | AAB in Internal Testing — not yet in Production | [Play Console](https://play.google.com/console/u/0/developers/4675244536437696492) |
 
-### 2) Report UX ✅
+**EAS project:** `https://expo.dev/accounts/hasankhatib/projects/husoga`  
+**Bundle ID (both):** `com.husoga.app`  
+**IAP product ID (both):** `com.husoga.pro`
 
-Epic: #17
+---
 
-Tasks:
-- [x] #27 Spec: Basic vs Detailed report content (free vs paid)
-- [x] #28 UI: add CTA to view Detailed report and paywall for free users
-- [x] #29 UI: build Detailed report screen (paid)
-- [x] #42 fix(ui): clarify cost highlight in dark mode
-- [x] #30 Paid: export/share report (text share)
-- [x] #31 Paid: generate PDF from report
+## Pre-Launch Checklist
 
-### 3) Sources & References ✅
+### Track A — Store blockers (must be done before App Review approval)
 
-Epic: #18
+These block Apple/Google from approving the app. Do them first.
 
-Tasks:
-- [x] #32 Data: create curated sources registry
-- [x] #33 UI: show Sources section in Basic report
-- [x] #34 UI: show Sources in Detailed report grouped by topic
+- [ ] **#81** Deploy website to Cloudflare Pages (`husoga.app` must resolve for privacy policy URL)
+- [ ] **#82** Create `com.husoga.pro` IAP in App Store Connect (Monetize → In-App Purchases)
+- [ ] **#83** Create `com.husoga.pro` IAP in Google Play Console (Monetize → In-app products)
+- [ ] **#84** Create App Store screenshots — 5 frames, iOS (1320×2868) + Android (1080×1920)
 
-### 4) Plans + IAP ✅
+### Track B — Publishing (after Track A is complete)
 
-Epic: #19
+- [ ] **#85** TestFlight internal test + submit for App Store Review
+- [ ] **#86** Promote Android from Internal Testing to Production in Play Console
 
-Tasks:
-- [x] #35 Plan: free tier should allow 2 basic reports
-- [x] #36 IAP: implement real purchase + restore (ties to #11)
-- [x] #37 Gating: enforce paid-only features
+---
 
-### 5) Condition Engine v3 ✅
+## Rollout Plan
 
-Epic: #51
+1. Complete Track A (all four store blockers)
+2. Self-test on TestFlight (build 6 is live now)
+3. Submit for App Store Review (#85)
+4. Promote Android to Production (#86) — can happen in parallel with iOS review
+5. Public launch
 
-Replaces the single aggregate score with a per-component traffic-light output.
-All 6 components always emitted. Drops `score`, `scoreBand`, `lifecycleFlags`.
-MODEL_VERSION bumps to 2.0.0.
+---
 
-Free/paid split:
-- Free: traffic-light summary (6 rows) + viewing tips
-- Paid: decision points, cost forecast, lifetime analysis, green recommendations
+## Completed Epics
 
-Tasks:
-- [x] #55 6a: New types — ConditionLevel, ComponentCondition, ConditionOutput
-- [x] #56 6b: Rewrite engine output, viewingTips + greenSignals builders, MODEL_VERSION 2.0.0
-- [x] #57 6c: i18n — condition framing strings, viewing tips, green signals (both locales)
-- [x] #58 6d: Localize triggeredBy field name labels (fix #14)
-- [x] #59 6e: Rewrite riskEngine tests for new ConditionOutput shape
+Full details in `docs/history.md`.
 
-### 6) Result Screen Rewrite ✅
-
-Epic: #52
-
-Tasks:
-- [x] #60 7a: ComponentRow UI — traffic-light summary card (replaces score card)
-- [x] #61 7b: Viewing tips section (free)
-- [x] #62 7c: Decision points section (paid, gated)
-- [x] #63 7d: Cost forecast section (paid, replaces CostPill row)
-- [x] #64 7e: Lifetime analysis section (paid, age vs lifespan table)
-- [x] #65 7f: Green recommendations section (paid)
-- [x] #66 7g: Report list index — replace score pill with compact traffic-light dots
-
-### 7) PDF / Share Rewrite ✅
-
-Epic: #53
-
-Tasks:
-- [x] #67 8a: Rewrite PDF HTML template with traffic-light structure and buyer-quality sections
-- [x] #68 8b+8c: Update buildShareText to describe traffic-light summary
-
-### 8) Website
-
-Epic: #20
-
-Tasks:
-- [x] #72 9e: Complete website — index.html with privacy policy (closes #38, #39)
-
-### 9) App Store Publishing ✅
-
-Epic: #54
-
-Tasks:
-- [x] #69 9a: Fix Android adaptive icon (transparent-bg foreground layer)
-- [x] #70 9b+9c: Write App Store and Play Store listing copy
-- [x] #71 9d: Screenshot specs and mockup guide
-- [x] #73 9f: iOS build and TestFlight submission
-- [x] #74 9g: Google Play account setup and Android submission
-
-### 10) RevenueCat IAP Migration ✅
-
-Epic: #75
-
-Replaces the defunct `expo-in-app-purchases` (incompatible with Expo SDK 54, removed from
-Expo monorepo) with `react-native-purchases` (RevenueCat). Root cause of all 4 Android
-EAS build failures (`EAS_BUILD_UNKNOWN_GRADLE_ERROR`).
-
-Tasks:
-- [x] #76 Remove expo-in-app-purchases, install react-native-purchases@9.15.2
-- [x] #77 Rewrite iap.ts + iapConfig.ts for RevenueCat SDK
-- [x] #78 Initialise RevenueCat in app/_layout.tsx
-- [x] #79 **[HUMAN]** Create RevenueCat project + set API keys as EAS env vars
-- [x] #80 Update deployment.md + README for RevenueCat
-
-## Rollout
-
-1. Internal TestFlight (self-test)
-2. Friends & family TestFlight (5–10 testers)
-3. Public App Store release
-4. Google Play release
-
-## Existing Open Issues
-
-- #14 Localize triggeredBy labels → covered by #58
-- #47 IAP: iOS non-consumable unlock
-- #48 Google Play Developer account → covered by #74
-- #49 IAP: Android managed product
+| Epic | Summary |
+|---|---|
+| 1 — Risk Engine v2 | Deterioration curves, component weights, defect multipliers |
+| 2 — Report UX | Basic vs Detailed split, paywall, PDF export, text share |
+| 3 — Sources & References | In-app curated sources, shown in both report views |
+| 4 — Plans + IAP | Free tier (2 reports), IAP wiring, paid feature gating |
+| 5 — Condition Engine v3 | Traffic-light output, dropped aggregate score, MODEL_VERSION 2.0.0 |
+| 6 — Result Screen Rewrite | ComponentRow UI, viewing tips, cost forecast, lifetime analysis |
+| 7 — PDF / Share Rewrite | Traffic-light HTML template, updated share text |
+| 8 — Website | `index.html` with privacy policy, ready for Cloudflare Pages |
+| 9 — App Store Publishing | Adaptive icon, store copy, iOS build in TestFlight, Android in Internal Testing |
+| 10 — RevenueCat IAP Migration | Replaced `expo-in-app-purchases` with `react-native-purchases`, Android builds unblocked |
