@@ -16,8 +16,8 @@ This roadmap is a checklist. Items are checked when the linked GitHub issue is c
 6. ~~Result screen rewrite (traffic-light layout, progressive disclosure)~~ ✅
 7. ~~PDF/share rewrite (buyer-quality output)~~ ✅
 8. ~~Website (single HTML page)~~ ✅
-9. App Store publishing (iOS + Android) ← blocked on #10
-10. RevenueCat IAP migration ← **unblocks Android build** 🔴
+9. ~~App Store publishing (iOS + Android)~~ ✅
+10. ~~RevenueCat IAP migration~~ ✅
 
 ## Epics
 
@@ -110,7 +110,7 @@ Epic: #20
 Tasks:
 - [x] #72 9e: Complete website — index.html with privacy policy (closes #38, #39)
 
-### 9) App Store Publishing
+### 9) App Store Publishing ✅
 
 Epic: #54
 
@@ -118,10 +118,10 @@ Tasks:
 - [x] #69 9a: Fix Android adaptive icon (transparent-bg foreground layer)
 - [x] #70 9b+9c: Write App Store and Play Store listing copy
 - [x] #71 9d: Screenshot specs and mockup guide
-- [ ] #73 9f: iOS build and TestFlight submission
-- [ ] #74 9g: Google Play account setup and Android submission
+- [x] #73 9f: iOS build and TestFlight submission
+- [x] #74 9g: Google Play account setup and Android submission
 
-### 10) RevenueCat IAP Migration ← **CURRENT PRIORITY**
+### 10) RevenueCat IAP Migration ✅
 
 Epic: #75
 
@@ -133,7 +133,7 @@ Tasks:
 - [x] #76 Remove expo-in-app-purchases, install react-native-purchases@9.15.2
 - [x] #77 Rewrite iap.ts + iapConfig.ts for RevenueCat SDK
 - [x] #78 Initialise RevenueCat in app/_layout.tsx
-- [ ] #79 **[HUMAN]** Create RevenueCat project + set API keys as EAS env vars
+- [x] #79 **[HUMAN]** Create RevenueCat project + set API keys as EAS env vars
 - [x] #80 Update deployment.md + README for RevenueCat
 
 ## Rollout

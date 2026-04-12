@@ -70,25 +70,22 @@ Flutter v1 source is preserved on the `flutter-archive` branch.
 
 ## Project Status
 
-**Completed:** Risk engine v2, Basic/Detailed report UX, in-app sources, IAP wiring, and the full **Condition Engine v3** rewrite are all shipped. The single aggregate score has been replaced with a per-component traffic-light konditionsöversikt (6 rows). MODEL_VERSION is 2.0.0.
+**Both stores submitted.** All development epics are complete.
 
 **Free/paid split:**
 - Free: traffic-light konditionsöversikt (6 rows) + viewing tips
 - Paid: decision points, cost forecast, lifetime analysis, green recommendations, PDF export
 
-**Epic 10 — RevenueCat IAP migration (current priority):**
-- ✅ #76 Replaced expo-in-app-purchases with react-native-purchases@9.15.2
-- ✅ #77 Rewrote iap.ts + iapConfig.ts for RevenueCat SDK
-- ✅ #78 RevenueCat initialised in app/_layout.tsx
-- ⏳ #79 **[HUMAN TASK]** Create RevenueCat project + set `REVENUECAT_IOS_API_KEY` + `REVENUECAT_ANDROID_API_KEY` as EAS env vars — see issue #79 for step-by-step guide
-- ✅ #80 Updated deployment.md + README
+**Build status:**
+- ✅ Android build `6724b568` — finished, AAB uploaded to Play Console Internal Testing
+- ✅ iOS build `fe777117` — finished, IPA ready
+- ⏳ iOS submit — `eas submit --platform ios` failing with opaque ASC error; check Expo dashboard for details: https://expo.dev/accounts/hasankhatib/projects/husoga/submissions/
 
-**Epic 9 — App Store publishing (blocked on Epic 10):**
-- ✅ #69 Android adaptive icon
-- ✅ #70 App Store + Play Store listing copy
-- ✅ #71 Screenshot specs
-- ✅ #72 Website with privacy policy
-- ⏳ #73 iOS EAS build — run `eas build --platform ios --profile production` interactively in your terminal after #79 is done
-- ⏳ #74 Android EAS build — run `eas build --platform android --profile production --no-wait` after #79 is done
+**Remaining human tasks before public release:**
+1. Fix iOS App Store Connect submission (check Expo dashboard error detail)
+2. Create `com.husoga.pro` IAP product in App Store Connect (Monetize → In-App Purchases)
+3. Create `com.husoga.pro` IAP product in Google Play Console (Monetize → In-app products)
+4. Submit for App Store review once on TestFlight
+5. Promote Android from Internal Testing → Production in Play Console
 
-_Last updated: 2026-04-12 (refs #75, #76, #77, #78, #79, #80)_
+_Last updated: 2026-04-12 (refs #54, #73, #74, #75)_
