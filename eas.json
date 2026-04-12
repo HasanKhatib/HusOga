@@ -23,8 +23,8 @@
       },
       "ios": {
         "ascAppId": "6761786637",
-        "appleApiKeyId": "X6FR57N2NT",
-        "appleApiIssuerId": "806b9c67-9e8f-40ad-a0c5-64259307c227"
+        "ascApiKeyId": "X6FR57N2NT",
+        "ascApiKeyIssuerId": "806b9c67-9e8f-40ad-a0c5-64259307c227"
       }
     }
   }
