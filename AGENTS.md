@@ -26,6 +26,7 @@ HusÖga is an offline-only React Native (Expo, TypeScript) mobile app that estim
 ## Roadmap board (agentkan)
 
 - Board directory: `docs/board/` (`roadmap.json` state, `next.json` focus, `epics/<ID>.md` prose, `archive.json` finished epics).
+- Claude Code config is committed in `.claude/` (`settings.json` permissions + board-validation hook, `agents/council.md` subagent, `skills/agentkan/`). Personal overrides go in `.claude/settings.local.json` (gitignored).
 - Skill: `.claude/skills/agentkan/` — follow it for adding/refining epics, migrations and handoff.
 - After every board edit run `npx agentkan validate docs/board`. Humans operate the board with `npx agentkan serve docs/board`.
 - **AI proposes, human disposes:** never mark an epic `done`, archive, delete or reorder wholesale unless asked in that turn.
@@ -64,12 +65,17 @@ npm run start          # Expo dev server (Metro)
 npm run ios            # iOS simulator
 npm run android        # Android emulator
 npm run test           # Jest unit tests (pure TS, Node, no Expo)
+npm run typecheck      # tsc --noEmit
 npx jest __tests__/riskEngine.test.ts            # single file
 npx jest --testNamePattern "betongplatta"        # single test
 ```
 
 No codegen, no pre-commit hooks. EAS production builds (ask first):
 `eas build --platform ios|android --profile production`. EAS project: `https://expo.dev/accounts/hasankhatib/projects/husoga`. Bundle ID: `com.husoga.app`.
+
+## Definition of done
+
+Before calling work finished: `npm run typecheck` and `npm test` pass; new user-facing strings exist in both `sv` and `en`; disclaimers intact; `MODEL_VERSION` bumped if risk semantics changed; board validated and `next.json` refreshed. Prefer fixing the root cause over adding workarounds, and keep changes scoped to the task.
 
 ## Architecture
 

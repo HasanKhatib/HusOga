@@ -42,3 +42,6 @@ yarn-error.*
 
 # design references
 screenshots/
+
+# Claude Code local settings
+.claude/settings.local.json

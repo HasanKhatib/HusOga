@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx agentkan validate:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(eas build:*)",
+      "Bash(eas submit:*)",
+      "Bash(npm publish:*)"
+    ],
+    "deny": [
+      "Read(./.env*)",
+      "Read(**/*.p8)",
+      "Read(**/*.p12)",
+      "Read(**/*.jks)",
+      "Read(**/*.key)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-board.sh" }
+        ]
+      }
+    ]
+  }
+}
