@@ -54,7 +54,7 @@ eas submit --platform android
 - Prefer roadmap priority order unless explicitly overridden.
 - When closing an issue or completing a milestone, update `## Project Status` below in the same commit.
 
-See `docs/roadmap.md` for the full task list.
+The roadmap lives on the agentkan board in `docs/board/` (`npx agentkan serve docs/board`).
 
 ## Architecture
 
@@ -62,7 +62,7 @@ See `docs/roadmap.md` for the full task list.
 app/          Expo Router screens (form, result, settings, report list)
 src/core/     Risk engine, models, AsyncStorage services, IAP, i18n
 __tests__/    Jest unit tests (risk engine + validation)
-docs/         Deployment, commerce, product specs, risk logic research
+docs/         Board, deployment, commerce, product specs, risk logic
 plugins/      EAS config plugins (Android BILLING permission)
 ```
 
@@ -77,7 +77,7 @@ Flutter v1 source is preserved on the `flutter-archive` branch.
 | iOS | Build 6 (1.0.0) processed by Apple — available in TestFlight |
 | Android | AAB in Play Console Internal Testing |
 
-**Pre-launch checklist** (see `docs/roadmap.md` for detail):
+**Pre-launch checklist** (see `docs/board/` for detail):
 - [ ] #81 Deploy website to Cloudflare Pages (`husoga.app`)
 - [ ] #82 Create `com.husoga.pro` IAP in App Store Connect
 - [ ] #83 Create `com.husoga.pro` IAP in Google Play Console

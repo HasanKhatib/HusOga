@@ -1,0 +1,24 @@
+{
+  "updated": "2026-11-19",
+  "next": "E2.1-T1",
+  "note": "Deploy index.html (website + privacy policy) to Cloudflare Pages so husoga.app resolves before App Review.",
+  "criticalPath": [
+    {
+      "title": "Create com.husoga.pro IAP in App Store Connect",
+      "assignee": "me",
+      "status": "todo",
+      "unblocks": "E2.2"
+    },
+    {
+      "title": "Create com.husoga.pro IAP in Google Play Console",
+      "assignee": "me",
+      "status": "todo",
+      "unblocks": "E2.2"
+    }
+  ],
+  "risks": [
+    "IAP product IDs must exist in both stores before any RevenueCat build goes to review",
+    "Bump MODEL_VERSION in riskEngine.ts if risk semantics change post-launch",
+    "Disclaimer copy must survive any UX simplification"
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "$schema": "./roadmap.schema.json",
+  "version": 1,
+  "project": "HusÖga",
+  "updated": "2026-11-19",
+  "releases": [
+    {
+      "id": "v1",
+      "title": "Public launch",
+      "emoji": "🚀",
+      "status": "active",
+      "goal": "HusÖga 1.0.0 live on App Store and Google Play.",
+      "exit": "App publicly downloadable on both stores."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Core product",
+      "emoji": "🔨",
+      "status": "done",
+      "release": "v1",
+      "goal": "Feature-complete offline app with IAP and store builds.",
+      "exit": "App in TestFlight + Internal Testing.",
+      "epics": []
+    },
+    {
+      "id": "P2",
+      "title": "Store launch",
+      "emoji": "🚀",
+      "status": "active",
+      "release": "v1",
+      "goal": "Clear store blockers, submit, go public.",
+      "exit": "Live on App Store + Google Play.",
+      "epics": [
+        {
+          "id": "E2.1",
+          "title": "Track A — Store blockers",
+          "emoji": "🚧",
+          "status": "active",
+          "assignee": "me",
+          "labels": [
+            "chore"
+          ],
+          "planned": null,
+          "body": "epics/E2.1.md",
+          "goal": "All store-review blockers cleared (website, both IAPs, screenshots).",
+          "exit": "husoga.app resolves; com.husoga.pro exists in both consoles; screenshots uploaded.",
+          "tasks": [
+            {
+              "id": "E2.1-T1",
+              "title": "#81 Deploy website to Cloudflare Pages (husoga.app)",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [],
+              "planned": null
+            },
+            {
+              "id": "E2.1-T2",
+              "title": "#82 Create com.husoga.pro IAP in App Store Connect",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [],
+              "planned": null
+            },
+            {
+              "id": "E2.1-T3",
+              "title": "#83 Create com.husoga.pro IAP in Google Play Console",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [],
+              "planned": null
+            },
+            {
+              "id": "E2.1-T4",
+              "title": "#84 Create store screenshots (5 frames, iOS 1320×2868 + Android 1080×1920)",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [],
+              "planned": null
+            }
+          ]
+        },
+        {
+          "id": "E2.2",
+          "title": "Track B — Publishing",
+          "emoji": "📦",
+          "status": "blocked",
+          "assignee": "me",
+          "labels": [
+            "chore"
+          ],
+          "planned": null,
+          "body": "epics/E2.2.md",
+          "goal": "Both apps submitted and released to production.",
+          "exit": "App Store review approved and Android promoted to Production.",
+          "tasks": [
+            {
+              "id": "E2.2-T1",
+              "title": "#85 TestFlight internal test + submit for App Store Review",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [],
+              "planned": null
+            },
+            {
+              "id": "E2.2-T2",
+              "title": "#86 Promote Android from Internal Testing to Production",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [],
+              "planned": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Post-launch iteration",
+      "emoji": "🔁",
+      "status": "planned",
+      "goal": "Iterate on real user feedback.",
+      "exit": "TBD based on user feedback.",
+      "epics": []
+    }
+  ]
+}
